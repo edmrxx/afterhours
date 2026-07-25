@@ -1122,7 +1122,7 @@ class BookingService
         // Last resort: guaranteed unique by construction.
         return sprintf(
             '%s-%s',
-            (string) config('booking.code_prefix', 'PHEA'),
+            (string) config('booking.code_prefix', 'AH'),
             Str::upper(Str::random(4)).Str::upper(base_convert((string) now()->getTimestampMs(), 10, 36)),
         );
     }

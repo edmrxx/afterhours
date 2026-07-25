@@ -60,7 +60,7 @@ const props = defineProps({
     holdMinutes: { type: Number, default: 30 },
     horizonDays: { type: Number, default: 60 },
     company: { type: Object, default: () => ({}) },
-    codePrefix: { type: String, default: 'PHEA' },
+    codePrefix: { type: String, default: 'AH' },
 });
 
 const peso = new Intl.NumberFormat('en-PH', {
@@ -87,14 +87,14 @@ function availability(count) {
     const n = count ?? 0;
 
     if (n === 0) {
-        return { label: 'Fully booked', class: 'text-navy-400' };
+        return { label: 'Fully booked', class: 'text-noir-400' };
     }
 
     if (n <= 3) {
-        return { label: `${n} left today`, class: 'text-taupe-700' };
+        return { label: `${n} left today`, class: 'text-ash-700' };
     }
 
-    return { label: `${n} open today`, class: 'text-sapphire-600' };
+    return { label: `${n} open today`, class: 'text-graphite-600' };
 }
 
 /* ── Date switching ────────────────────────────────────────────────── */
@@ -442,7 +442,7 @@ function submitLookup() {
 <template>
     <PublicLayout :title="court ? `Book ${court.name}` : 'Book a pickleball court'" :contained="false">
         <!-- ── Hero ───────────────────────────────────────────────────── -->
-        <section class="relative overflow-hidden bg-navy-900">
+        <section class="relative overflow-hidden bg-noir-900">
             <img
                 v-if="court?.photo_url"
                 :src="court.photo_url"
@@ -452,63 +452,63 @@ function submitLookup() {
 
             <!--
               No court photo is the common case, so the fallback has to stand on
-              its own: a navy→sapphire wash, two soft light sources, and an
+              its own: a noir→graphite wash, two soft light sources, and an
               abstract court diagram ruled in the corner.
             -->
             <div v-else class="pointer-events-none absolute inset-0" aria-hidden="true">
                 <div
-                    class="absolute inset-0 bg-gradient-to-br from-navy-900 via-sapphire-800 to-navy-900"
+                    class="absolute inset-0 bg-gradient-to-br from-noir-900 via-graphite-800 to-noir-900"
                 />
                 <div
-                    class="absolute -top-40 -left-32 h-[34rem] w-[34rem] rounded-full bg-sapphire-500/30 blur-3xl"
+                    class="absolute -top-40 -left-32 h-[34rem] w-[34rem] rounded-full bg-graphite-500/30 blur-3xl"
                 />
                 <div
-                    class="absolute -right-24 -bottom-40 h-[26rem] w-[26rem] rounded-full bg-taupe-500/10 blur-3xl"
+                    class="absolute -right-24 -bottom-40 h-[26rem] w-[26rem] rounded-full bg-ash-500/10 blur-3xl"
                 />
 
                 <!-- Court motif: outer line, service boxes, centre net. -->
                 <div
-                    class="absolute -top-8 -right-16 hidden h-[26rem] w-[26rem] rotate-[18deg] rounded-lg ring-1 ring-taupe-500/20 md:block"
+                    class="absolute -top-8 -right-16 hidden h-[26rem] w-[26rem] rotate-[18deg] rounded-lg ring-1 ring-ash-500/20 md:block"
                 >
-                    <div class="absolute inset-6 rounded-sm ring-1 ring-taupe-500/15" />
-                    <div class="absolute inset-x-6 top-1/2 h-px -translate-y-1/2 bg-taupe-500/25" />
-                    <div class="absolute inset-y-6 left-1/2 w-px -translate-x-1/2 bg-taupe-500/15" />
+                    <div class="absolute inset-6 rounded-sm ring-1 ring-ash-500/15" />
+                    <div class="absolute inset-x-6 top-1/2 h-px -translate-y-1/2 bg-ash-500/25" />
+                    <div class="absolute inset-y-6 left-1/2 w-px -translate-x-1/2 bg-ash-500/15" />
                 </div>
             </div>
 
             <div
-                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/85 to-navy-900/40"
+                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-noir-900 via-noir-900/85 to-noir-900/40"
                 aria-hidden="true"
             />
 
             <div class="relative mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-                <!-- Dark surface: the mark is placed bare, no plate. -->
+                <!-- Dark hero band: the light artwork, placed bare — no plate. -->
                 <img
-                    src="/images/brand/logo-mark.png"
-                    alt="The Paddle Room"
-                    width="231"
-                    height="178"
+                    src="/images/brand/logo-mark-light.png"
+                    alt="After Hours"
+                    width="960"
+                    height="463"
                     class="mb-8 h-12 w-auto sm:h-14"
                 />
 
                 <span
-                    class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-[0.2em] text-taupe-400 uppercase ring-1 ring-inset ring-white/15"
+                    class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-[0.2em] text-ash-400 uppercase ring-1 ring-inset ring-white/15"
                 >
                     <span class="relative flex h-2 w-2" aria-hidden="true">
                         <span
-                            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-taupe-400 opacity-75"
+                            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-ash-400 opacity-75"
                         />
-                        <span class="relative inline-flex h-2 w-2 rounded-full bg-taupe-400" />
+                        <span class="relative inline-flex h-2 w-2 rounded-full bg-ash-400" />
                     </span>
                     {{ totalOpenSlots }} open slot{{ totalOpenSlots === 1 ? '' : 's' }} right now
                 </span>
 
                 <h1 class="font-display-heading mt-5 max-w-2xl text-4xl text-white sm:text-5xl md:text-6xl">
-                    <span class="block">Where every rally</span>
-                    <span class="block text-taupe-400">finds its room.</span>
+                    <span class="block">Play beyond</span>
+                    <span class="block text-ash-400">the 9-to-5.</span>
                 </h1>
 
-                <p class="mt-5 max-w-xl text-sm leading-relaxed text-ivory-200/90 sm:text-base">
+                <p class="mt-5 max-w-xl text-sm leading-relaxed text-bone-200/90 sm:text-base">
                     {{
                         company.tagline ??
                         'Pick a time, pick your court, pay by QR. No sign-up, no phone tag — just show up and play.'
@@ -516,10 +516,12 @@ function submitLookup() {
                 </p>
 
                 <div class="mt-8 flex flex-wrap items-center gap-3">
-                    <!-- Taupe fill carries NAVY text — never white on taupe. -->
+                    <!-- Crimson fill, white text (10.9:1). The hero band is noir, so the
+                         brand colour is the only fill on it with enough presence to read
+                         as the primary action — an ash pill washes out against black. -->
                     <a
                         href="#book"
-                        class="inline-flex h-12 items-center gap-2 rounded-xl bg-taupe-500 px-5 text-sm font-semibold text-navy-900 shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-taupe-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-taupe-300"
+                        class="inline-flex h-12 items-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
                     >
                         Reserve now
                         <ArrowRight :size="16" aria-hidden="true" />
@@ -557,12 +559,12 @@ function submitLookup() {
         </section>
 
         <!-- ── Reservation widget ─────────────────────────────────────── -->
-        <section id="book" class="bg-ivory-100">
+        <section id="book" class="bg-bone-100">
             <div class="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
                 <!-- No courts at all -->
                 <div
                     v-if="courts.length === 0"
-                    class="rounded-2xl border border-ivory-300/70 bg-white shadow-card"
+                    class="rounded-2xl border border-bone-300/70 bg-white shadow-card"
                 >
                     <EmptyState
                         :icon="CalendarX"
@@ -574,7 +576,7 @@ function submitLookup() {
                         <template v-if="company.phone" #action>
                             <a
                                 :href="`tel:${company.phone}`"
-                                class="inline-flex h-10 items-center gap-2 rounded-xl border border-ivory-300 bg-white px-4 text-sm font-medium text-navy-700 shadow-card transition-colors hover:bg-ivory-50"
+                                class="inline-flex h-10 items-center gap-2 rounded-xl border border-bone-300 bg-white px-4 text-sm font-medium text-noir-700 shadow-card transition-colors hover:bg-bone-50"
                             >
                                 <Phone :size="16" aria-hidden="true" />
                                 Call {{ company.phone }}
@@ -587,7 +589,7 @@ function submitLookup() {
                 <div v-else class="flex flex-col gap-8 lg:flex-row lg:items-start">
                     <!-- Numbered card -->
                     <div
-                        class="min-w-0 flex-1 overflow-hidden rounded-2xl border border-ivory-300/70 bg-white shadow-card"
+                        class="min-w-0 flex-1 overflow-hidden rounded-2xl border border-bone-300/70 bg-white shadow-card"
                     >
                         <!-- No open days on ANY court -->
                         <div v-if="days.length === 0" class="p-5 sm:p-8">
@@ -602,15 +604,15 @@ function submitLookup() {
 
                         <template v-else>
                             <!-- 1. Choose date -->
-                            <div class="border-b border-ivory-200 p-5 sm:p-6">
+                            <div class="border-b border-bone-200 p-5 sm:p-6">
                                 <div class="flex items-center justify-between gap-3">
                                     <div class="min-w-0">
                                         <p
-                                            class="text-[11px] font-semibold tracking-[0.2em] text-taupe-700 uppercase"
+                                            class="text-[11px] font-semibold tracking-[0.2em] text-ash-700 uppercase"
                                         >
                                             1. Choose date
                                         </p>
-                                        <p class="mt-1 truncate text-xs text-navy-500">
+                                        <p class="mt-1 truncate text-xs text-noir-500">
                                             {{ activeDay?.long_label ?? 'Choose a day to see open times' }}
                                         </p>
                                     </div>
@@ -618,7 +620,7 @@ function submitLookup() {
                                     <div class="flex shrink-0 items-center gap-1">
                                         <button
                                             type="button"
-                                            class="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-ivory-300 bg-white text-navy-600 transition-colors hover:bg-ivory-50 hover:text-navy-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                                            class="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-bone-300 bg-white text-noir-600 transition-colors hover:bg-bone-50 hover:text-noir-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                                             aria-label="Scroll dates backwards"
                                             @click="scrollStrip(-1)"
                                         >
@@ -626,7 +628,7 @@ function submitLookup() {
                                         </button>
                                         <button
                                             type="button"
-                                            class="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-ivory-300 bg-white text-navy-600 transition-colors hover:bg-ivory-50 hover:text-navy-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                                            class="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-bone-300 bg-white text-noir-600 transition-colors hover:bg-bone-50 hover:text-noir-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                                             aria-label="Scroll dates forwards"
                                             @click="scrollStrip(1)"
                                         >
@@ -661,17 +663,17 @@ function submitLookup() {
                                         :class="[
                                             'group relative flex min-w-19 shrink-0 snap-start cursor-pointer flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5',
                                             'transition-[background-color,border-color,box-shadow,transform] duration-200 ease-[var(--ease-out-soft)]',
-                                            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900',
+                                            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900',
                                             day.date === selectedDate
-                                                ? 'border-navy-900 bg-navy-900 text-white shadow-card'
-                                                : 'border-ivory-300 bg-white text-navy-700 hover:-translate-y-0.5 hover:border-navy-300 hover:shadow-card',
+                                                ? 'border-noir-900 bg-noir-900 text-white shadow-card'
+                                                : 'border-bone-300 bg-white text-noir-700 hover:-translate-y-0.5 hover:border-noir-300 hover:shadow-card',
                                         ]"
                                         @click="selectDate(day.date)"
                                     >
                                         <span
                                             :class="[
                                                 'text-[10px] font-medium tracking-wide uppercase',
-                                                day.date === selectedDate ? 'text-white/75' : 'text-navy-400',
+                                                day.date === selectedDate ? 'text-white/75' : 'text-noir-400',
                                             ]"
                                         >
                                             {{ day.is_today ? 'Today' : day.is_tomorrow ? 'Tmrw' : day.weekday }}
@@ -680,7 +682,7 @@ function submitLookup() {
                                         <span
                                             :class="[
                                                 'text-[10px]',
-                                                day.date === selectedDate ? 'text-white/75' : 'text-navy-400',
+                                                day.date === selectedDate ? 'text-white/75' : 'text-noir-400',
                                             ]"
                                         >
                                             {{ day.month }}
@@ -690,7 +692,7 @@ function submitLookup() {
                                                 'mt-1 rounded-full px-1.5 py-0.5 text-[10px] leading-none font-medium',
                                                 day.date === selectedDate
                                                     ? 'bg-white/20 text-white'
-                                                    : 'bg-taupe-100 text-taupe-800',
+                                                    : 'bg-ash-100 text-ash-800',
                                             ]"
                                         >
                                             {{ day.slots_count }} open
@@ -701,7 +703,7 @@ function submitLookup() {
 
                             <!-- 2. Pick your time -->
                             <div class="p-5 sm:p-6">
-                                <p class="text-[11px] font-semibold tracking-[0.2em] text-taupe-700 uppercase">
+                                <p class="text-[11px] font-semibold tracking-[0.2em] text-ash-700 uppercase">
                                     2. Pick your time
                                 </p>
 
@@ -718,18 +720,18 @@ function submitLookup() {
                                 <!-- Rates summary banner -->
                                 <div
                                     v-if="!loadingSchedule && grid?.rates?.length"
-                                    class="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-ivory-100 px-3 py-2.5 ring-1 ring-inset ring-ivory-300/70"
+                                    class="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-bone-100 px-3 py-2.5 ring-1 ring-inset ring-bone-300/70"
                                 >
-                                    <span class="text-[11px] font-semibold tracking-wide text-navy-500 uppercase">
+                                    <span class="text-[11px] font-semibold tracking-wide text-noir-500 uppercase">
                                         Rates
                                     </span>
                                     <span
                                         v-for="(band, index) in grid.rates"
                                         :key="index"
-                                        class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-navy-700 ring-1 ring-inset ring-ivory-300"
+                                        class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-noir-700 ring-1 ring-inset ring-bone-300"
                                     >
-                                        <span class="font-semibold text-taupe-700">{{ money(band.price) }}</span>
-                                        <span class="text-navy-400">{{ band.start }} – {{ band.end }}</span>
+                                        <span class="font-semibold text-ash-700">{{ money(band.price) }}</span>
+                                        <span class="text-noir-400">{{ band.start }} – {{ band.end }}</span>
                                     </span>
                                 </div>
 
@@ -757,13 +759,13 @@ function submitLookup() {
 
                                 <!-- The grid: one row per time-of-day, one column per court -->
                                 <template v-else>
-                                    <div class="mt-4 overflow-x-auto rounded-xl border border-ivory-300/70">
+                                    <div class="mt-4 overflow-x-auto rounded-xl border border-bone-300/70">
                                         <table class="w-full min-w-max border-separate border-spacing-0 text-sm">
                                             <thead>
                                                 <tr>
                                                     <th
                                                         scope="col"
-                                                        class="sticky left-0 z-10 min-w-28 border-b border-ivory-300/70 bg-ivory-100 px-3 py-2.5 text-left text-[11px] font-semibold tracking-wide text-navy-500 uppercase"
+                                                        class="sticky left-0 z-10 min-w-28 border-b border-bone-300/70 bg-bone-100 px-3 py-2.5 text-left text-[11px] font-semibold tracking-wide text-noir-500 uppercase"
                                                     >
                                                         Time
                                                     </th>
@@ -771,9 +773,9 @@ function submitLookup() {
                                                         v-for="col in courts"
                                                         :key="col.id"
                                                         scope="col"
-                                                        class="min-w-[7.5rem] border-b border-l border-ivory-300/70 bg-ivory-100 px-3 py-2.5 text-left align-bottom"
+                                                        class="min-w-[7.5rem] border-b border-l border-bone-300/70 bg-bone-100 px-3 py-2.5 text-left align-bottom"
                                                     >
-                                                        <span class="block truncate text-xs font-semibold text-navy-900">
+                                                        <span class="block truncate text-xs font-semibold text-noir-900">
                                                             {{ col.name }}
                                                         </span>
                                                         <span
@@ -793,7 +795,7 @@ function submitLookup() {
                                                         <th
                                                             scope="colgroup"
                                                             :colspan="courts.length + 1"
-                                                            class="sticky left-0 z-[1] border-b border-ivory-200 bg-ivory-50 px-3 py-1.5 text-left text-[11px] font-semibold tracking-wide text-taupe-700 uppercase"
+                                                            class="sticky left-0 z-[1] border-b border-bone-200 bg-bone-50 px-3 py-1.5 text-left text-[11px] font-semibold tracking-wide text-ash-700 uppercase"
                                                         >
                                                             <span class="inline-flex items-center gap-1.5">
                                                                 <component
@@ -808,14 +810,14 @@ function submitLookup() {
                                                     <tr v-for="row in section.rows" :key="row.key" class="group">
                                                         <th
                                                             scope="row"
-                                                            class="sticky left-0 z-[1] border-b border-ivory-200 bg-white px-3 py-2 text-left text-xs font-medium whitespace-nowrap text-navy-700 group-hover:bg-ivory-50"
+                                                            class="sticky left-0 z-[1] border-b border-bone-200 bg-white px-3 py-2 text-left text-xs font-medium whitespace-nowrap text-noir-700 group-hover:bg-bone-50"
                                                         >
                                                             {{ row.start }} – {{ row.end }}
                                                         </th>
                                                         <td
                                                             v-for="col in courts"
                                                             :key="col.id"
-                                                            class="border-b border-l border-ivory-200 p-1.5"
+                                                            class="border-b border-l border-bone-200 p-1.5"
                                                         >
                                                             <GridSlotCell
                                                                 :status="cellFor(row, col.id).status"
@@ -842,17 +844,17 @@ function submitLookup() {
                                     </div>
 
                                     <!-- Legend -->
-                                    <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-navy-500">
+                                    <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-noir-500">
                                         <span class="inline-flex items-center gap-1.5">
                                             <span
-                                                class="h-3 w-3 rounded-sm border border-sapphire-500/30 bg-sapphire-50"
+                                                class="h-3 w-3 rounded-sm border border-graphite-500/30 bg-graphite-50"
                                                 aria-hidden="true"
                                             />
                                             Available
                                         </span>
                                         <span class="inline-flex items-center gap-1.5">
                                             <span
-                                                class="h-3 w-3 rounded-sm border border-navy-900 bg-taupe-100 ring-1 ring-navy-900"
+                                                class="h-3 w-3 rounded-sm border border-brand-600 bg-brand-600 ring-1 ring-brand-500/25"
                                                 aria-hidden="true"
                                             />
                                             Selected
@@ -886,32 +888,32 @@ function submitLookup() {
 
                     <!-- Your session -->
                     <aside
-                        class="w-full shrink-0 rounded-2xl border-2 border-taupe-500 bg-white p-6 shadow-card lg:sticky lg:top-24 lg:w-80"
+                        class="w-full shrink-0 rounded-2xl border-2 border-ash-500 bg-white p-6 shadow-card lg:sticky lg:top-24 lg:w-80"
                     >
-                        <p class="text-[11px] font-semibold tracking-[0.25em] text-taupe-700 uppercase">
+                        <p class="text-[11px] font-semibold tracking-[0.25em] text-ash-700 uppercase">
                             Your session
                         </p>
 
                         <dl class="mt-4 space-y-4">
-                            <div class="flex items-start justify-between gap-3 border-b border-ivory-200 pb-3">
-                                <dt class="text-xs text-navy-500">{{ isMultiCourt ? 'Courts' : 'Court' }}</dt>
-                                <dd class="text-right text-sm font-semibold text-navy-900">
+                            <div class="flex items-start justify-between gap-3 border-b border-bone-200 pb-3">
+                                <dt class="text-xs text-noir-500">{{ isMultiCourt ? 'Courts' : 'Court' }}</dt>
+                                <dd class="text-right text-sm font-semibold text-noir-900">
                                     <span v-if="isMultiCourt">{{
                                         slotsByCourt.map((group) => group.court_name).join(', ')
                                     }}</span>
                                     <span v-else-if="chosenSlots.length">{{ chosenSlots[0].court_name }}</span>
-                                    <span v-else class="font-normal text-navy-400">Pick a time</span>
+                                    <span v-else class="font-normal text-noir-400">Pick a time</span>
                                 </dd>
                             </div>
-                            <div class="flex items-start justify-between gap-3 border-b border-ivory-200 pb-3">
-                                <dt class="text-xs text-navy-500">Date</dt>
-                                <dd class="text-right text-sm font-semibold text-navy-900">
+                            <div class="flex items-start justify-between gap-3 border-b border-bone-200 pb-3">
+                                <dt class="text-xs text-noir-500">Date</dt>
+                                <dd class="text-right text-sm font-semibold text-noir-900">
                                     {{ activeDay?.long_label ?? '—' }}
                                 </dd>
                             </div>
-                            <div class="flex items-start justify-between gap-3 border-b border-ivory-200 pb-3">
-                                <dt class="pt-0.5 text-xs text-navy-500">Time</dt>
-                                <dd class="flex-1 text-right text-sm font-semibold text-navy-900">
+                            <div class="flex items-start justify-between gap-3 border-b border-bone-200 pb-3">
+                                <dt class="pt-0.5 text-xs text-noir-500">Time</dt>
+                                <dd class="flex-1 text-right text-sm font-semibold text-noir-900">
                                     <!-- Mixed courts: each line names its court so the guest can
                                          read which time belongs to which court at a glance. -->
                                     <ul v-if="isMultiCourt" class="space-y-2.5">
@@ -921,14 +923,14 @@ function submitLookup() {
                                             class="flex items-start justify-end gap-1.5"
                                         >
                                             <span class="flex flex-col items-end leading-tight">
-                                                <span class="text-[11px] font-medium text-navy-400">{{
+                                                <span class="text-[11px] font-medium text-noir-400">{{
                                                     slot.court_name
                                                 }}</span>
                                                 <span>{{ slot.start }} – {{ slot.end }}</span>
                                             </span>
                                             <button
                                                 type="button"
-                                                class="mt-0.5 inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-navy-400 transition-colors hover:bg-ivory-100 hover:text-navy-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                                                class="mt-0.5 inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-noir-400 transition-colors hover:bg-bone-100 hover:text-noir-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                                                 :aria-label="`Remove ${slot.court_name}, ${slot.start} – ${slot.end}`"
                                                 @click="removeSlot(slot.id)"
                                             >
@@ -945,7 +947,7 @@ function submitLookup() {
                                             <span>{{ slot.start }} – {{ slot.end }}</span>
                                             <button
                                                 type="button"
-                                                class="inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-navy-400 transition-colors hover:bg-ivory-100 hover:text-navy-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                                                class="inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-full text-noir-400 transition-colors hover:bg-bone-100 hover:text-noir-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                                                 :aria-label="`Remove ${slot.start} – ${slot.end}`"
                                                 @click="removeSlot(slot.id)"
                                             >
@@ -953,17 +955,17 @@ function submitLookup() {
                                             </button>
                                         </li>
                                     </ul>
-                                    <span v-else class="font-normal text-navy-400">Pick a slot</span>
+                                    <span v-else class="font-normal text-noir-400">Pick a slot</span>
                                 </dd>
                             </div>
                             <div class="flex items-start justify-between gap-3">
-                                <dt class="text-xs text-navy-500">Total</dt>
-                                <dd class="text-right text-base font-semibold text-taupe-700">
+                                <dt class="text-xs text-noir-500">Total</dt>
+                                <dd class="text-right text-base font-semibold text-ash-700">
                                     <span v-if="chosenSlots.length">{{ money(sessionTotal) }}</span>
-                                    <span v-else-if="court" class="text-sm font-normal text-navy-400">
+                                    <span v-else-if="court" class="text-sm font-normal text-noir-400">
                                         From {{ money(court.from_price) }}
                                     </span>
-                                    <span v-else class="text-sm font-normal text-navy-400">—</span>
+                                    <span v-else class="text-sm font-normal text-noir-400">—</span>
                                 </dd>
                             </div>
                         </dl>
@@ -975,8 +977,8 @@ function submitLookup() {
                                 'mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold',
                                 'transition-colors duration-200 ease-[var(--ease-out-soft)]',
                                 chosenSlots.length > 0
-                                    ? 'cursor-pointer bg-navy-900 text-white shadow-card hover:bg-sapphire-500'
-                                    : 'cursor-not-allowed bg-ivory-200 text-navy-400',
+                                    ? 'cursor-pointer bg-brand-600 text-white shadow-card hover:bg-brand-500'
+                                    : 'cursor-not-allowed bg-bone-200 text-noir-400',
                             ]"
                             @click="openDetails"
                         >
@@ -984,8 +986,8 @@ function submitLookup() {
                             <ArrowRight :size="16" aria-hidden="true" />
                         </button>
 
-                        <p class="mt-3 flex items-start gap-2 text-xs leading-relaxed text-navy-500">
-                            <Timer :size="14" class="mt-0.5 shrink-0 text-navy-400" aria-hidden="true" />
+                        <p class="mt-3 flex items-start gap-2 text-xs leading-relaxed text-noir-500">
+                            <Timer :size="14" class="mt-0.5 shrink-0 text-noir-400" aria-hidden="true" />
                             Choosing a time holds it for {{ holdMinutes }} minutes while you pay.
                         </p>
                     </aside>
@@ -994,15 +996,15 @@ function submitLookup() {
         </section>
 
         <!-- ── Already booked? ────────────────────────────────────────── -->
-        <section id="lookup" class="bg-navy-900">
+        <section id="lookup" class="bg-noir-900">
             <div class="mx-auto w-full max-w-2xl px-4 py-14 text-center sm:px-6 sm:py-20">
-                <p class="text-[11px] font-semibold tracking-[0.25em] text-taupe-400 uppercase">
+                <p class="text-[11px] font-semibold tracking-[0.25em] text-ash-400 uppercase">
                     Already booked?
                 </p>
                 <h2 class="font-display-heading mt-2 text-2xl text-white sm:text-3xl">
                     Find your reservation
                 </h2>
-                <p class="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ivory-300">
+                <p class="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-bone-300">
                     Enter the booking code we sent you. No account, no password — the code is all you need.
                 </p>
 
@@ -1030,7 +1032,7 @@ function submitLookup() {
                     <button
                         type="submit"
                         :disabled="lookupForm.processing"
-                        class="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-taupe-500 px-5 text-sm font-semibold text-navy-900 shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-taupe-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-taupe-300 disabled:pointer-events-none disabled:opacity-60"
+                        class="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 disabled:pointer-events-none disabled:opacity-60"
                     >
                         <LoaderCircle v-if="lookupForm.processing" :size="16" class="animate-spin" aria-hidden="true" />
                         <span>Find booking</span>
@@ -1042,27 +1044,27 @@ function submitLookup() {
         <!-- ── Details modal ──────────────────────────────────────────── -->
         <Modal v-model="checkoutOpen" size="lg" :closeable="!form.processing">
             <template #header>
-                <p class="text-[11px] font-semibold tracking-[0.25em] text-taupe-700 uppercase">
+                <p class="text-[11px] font-semibold tracking-[0.25em] text-ash-700 uppercase">
                     Almost there
                 </p>
-                <h2 class="font-display-heading mt-1 text-xl text-navy-900">Your details</h2>
-                <p class="mt-1 text-sm text-navy-500">
+                <h2 class="font-display-heading mt-1 text-xl text-noir-900">Your details</h2>
+                <p class="mt-1 text-sm text-noir-500">
                     Tell us who is playing and we will hold this slot for you.
                 </p>
             </template>
 
             <form id="reserve-form" class="space-y-5" @submit.prevent="submit">
                 <!-- Slot summary -->
-                <div v-if="chosenSlots.length" class="rounded-xl bg-taupe-50 p-4 ring-1 ring-inset ring-taupe-300">
-                    <p class="text-xs font-medium tracking-wide text-taupe-700 uppercase">
+                <div v-if="chosenSlots.length" class="rounded-xl bg-ash-50 p-4 ring-1 ring-inset ring-ash-300">
+                    <p class="text-xs font-medium tracking-wide text-ash-700 uppercase">
                         {{ chosenSlots.length === 1 ? 'Your slot' : `Your ${chosenSlots.length} slots` }}
                     </p>
                     <!-- Mixed courts: group each court with its own times so the
                          guest confirms exactly which court holds which slot. -->
                     <div v-if="isMultiCourt" class="mt-1.5 space-y-2.5">
                         <div v-for="group in slotsByCourt" :key="group.court_id">
-                            <p class="text-sm font-semibold text-navy-900">{{ group.court_name }}</p>
-                            <ul class="mt-0.5 space-y-0.5 text-sm text-navy-600">
+                            <p class="text-sm font-semibold text-noir-900">{{ group.court_name }}</p>
+                            <ul class="mt-0.5 space-y-0.5 text-sm text-noir-600">
                                 <li v-for="slot in group.slots" :key="slot.id">
                                     {{ slot.start }} – {{ slot.end }}
                                 </li>
@@ -1070,21 +1072,21 @@ function submitLookup() {
                         </div>
                     </div>
                     <template v-else>
-                        <p class="mt-1.5 text-base font-semibold text-navy-900">
+                        <p class="mt-1.5 text-base font-semibold text-noir-900">
                             {{ chosenSlots[0].court_name }}
                         </p>
-                        <ul class="mt-0.5 space-y-0.5 text-sm text-navy-600">
+                        <ul class="mt-0.5 space-y-0.5 text-sm text-noir-600">
                             <li v-for="slot in chosenSlots" :key="slot.id">
                                 {{ slot.start }} – {{ slot.end }}
                                 <span v-if="chosenSlots.length === 1">· {{ slot.duration_minutes }} minutes</span>
                             </li>
                         </ul>
                     </template>
-                    <p class="mt-1 text-sm text-navy-600">{{ activeDay?.long_label }}</p>
+                    <p class="mt-1 text-sm text-noir-600">{{ activeDay?.long_label }}</p>
 
-                    <div class="mt-3.5 flex items-end justify-between border-t border-taupe-500/40 pt-3">
-                        <span class="text-sm text-navy-600">Total to pay</span>
-                        <span class="text-xl leading-none font-semibold text-taupe-700">
+                    <div class="mt-3.5 flex items-end justify-between border-t border-ash-500/40 pt-3">
+                        <span class="text-sm text-noir-600">Total to pay</span>
+                        <span class="text-xl leading-none font-semibold text-ash-700">
                             {{ money(sessionTotal) }}
                         </span>
                     </div>
@@ -1139,7 +1141,7 @@ function submitLookup() {
                 <button
                     type="button"
                     :disabled="form.processing"
-                    class="inline-flex h-11 cursor-pointer items-center justify-center rounded-xl border border-ivory-300 bg-white px-4 text-sm font-medium text-navy-700 shadow-card transition-colors hover:bg-ivory-50 disabled:pointer-events-none disabled:opacity-60"
+                    class="inline-flex h-11 cursor-pointer items-center justify-center rounded-xl border border-bone-300 bg-white px-4 text-sm font-medium text-noir-700 shadow-card transition-colors hover:bg-bone-50 disabled:pointer-events-none disabled:opacity-60"
                     @click="checkoutOpen = false"
                 >
                     Back to times
@@ -1148,7 +1150,7 @@ function submitLookup() {
                     type="submit"
                     form="reserve-form"
                     :disabled="form.processing"
-                    class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-navy-900 px-5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-sapphire-500 disabled:pointer-events-none disabled:opacity-60"
+                    class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-graphite-500 disabled:pointer-events-none disabled:opacity-60"
                 >
                     <LoaderCircle v-if="form.processing" :size="16" class="animate-spin" aria-hidden="true" />
                     Confirm reservation

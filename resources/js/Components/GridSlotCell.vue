@@ -5,11 +5,16 @@
 | and formats the price, this just renders the four/five visual states with
 | the app's existing slot-status colour convention (Composables/useStatus.js):
 |
-|   available    -> sapphire tone, clickable, shows the price
-|   selected     -> the customer's current pick — distinct navy/taupe treatment
+|   available    -> graphite tone, clickable, shows the price
+|   selected     -> the customer's current pick — solid brand-600 crimson,
+|                   white text (10.9:1), the grid's only saturated fill
 |   pending      -> warn tone, "Held" by someone mid-checkout, not clickable
-|   booked       -> brand tone, already taken, not clickable
+|   booked       -> pale brand wash, already taken, not clickable
 |   unavailable  -> muted ink tone, nothing was ever scheduled here, not clickable
+|
+| Every neutral ramp (graphite/ash/ink) lands on a near-white grey at these
+| tints, so crimson is what keeps "selected" unmistakable next to its
+| neighbours — booked stays a pale brand-50 wash and never competes with it.
 */
 
 defineProps({
@@ -46,10 +51,10 @@ const TONE = {
         :class="[
             'flex h-14 w-full flex-col items-center justify-center gap-0.5 rounded-lg border text-xs font-semibold',
             'transition-[background-color,border-color,box-shadow,transform] duration-150 ease-[var(--ease-out-soft)]',
-            'cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900',
+            'cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900',
             selected
-                ? 'border-navy-900 bg-taupe-100 text-navy-900 shadow-card ring-2 ring-navy-900'
-                : 'border-sapphire-500/30 bg-sapphire-50 text-sapphire-700 hover:-translate-y-0.5 hover:border-sapphire-500 hover:bg-sapphire-100 hover:shadow-card-hover',
+                ? 'border-brand-600 bg-brand-600 text-white shadow-card ring-2 ring-brand-500/25'
+                : 'border-graphite-500/30 bg-graphite-50 text-graphite-700 hover:-translate-y-0.5 hover:border-graphite-500 hover:bg-graphite-100 hover:shadow-card-hover',
         ]"
         @click="$emit('pick')"
     >

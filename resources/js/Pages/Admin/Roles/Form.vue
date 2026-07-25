@@ -192,7 +192,7 @@ function submit() {
                     <div class="min-w-0">
                         <h3 class="text-sm font-semibold text-ink-900">Permissions</h3>
                         <p class="mt-0.5 text-xs text-ink-500">
-                            Grouped by module. Access everywhere in The Paddle Room is checked against these
+                            Grouped by module. Access everywhere in After Hours is checked against these
                             names — never against a role name.
                         </p>
                     </div>

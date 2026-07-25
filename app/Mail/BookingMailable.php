@@ -49,7 +49,7 @@ abstract class BookingMailable extends Mailable
             $uploaded = $settings->get('company', 'company_logo_path');
 
             return [
-                'name' => (string) ($settings->get('company', 'name') ?: config('app.name', 'PHEA')),
+                'name' => (string) ($settings->get('company', 'name') ?: config('app.name', 'After Hours')),
                 'email' => $settings->get('company', 'email') ?: config('mail.from.address'),
                 'phone' => $settings->get('company', 'phone'),
                 'address' => $settings->get('company', 'address'),
@@ -58,7 +58,7 @@ abstract class BookingMailable extends Mailable
             ];
         } catch (Throwable) {
             return [
-                'name' => (string) config('app.name', 'PHEA'),
+                'name' => (string) config('app.name', 'After Hours'),
                 'email' => config('mail.from.address'),
                 'phone' => null,
                 'address' => null,
@@ -78,9 +78,11 @@ abstract class BookingMailable extends Mailable
      * renders broken for the very recipient it was sent to. An embedded image
      * travels with the mail and always displays.
      *
-     * An admin-uploaded logo (Admin > Settings > Company) is drawn for a light
-     * background, unlike the shipped navy-header wordmark, so the layout wraps
-     * it in a light plate — `logo_is_uploaded` tells it which treatment to use.
+     * The mail header is a noir band, so the shipped default is the LIGHT
+     * wordmark — logo-mark.png is the crimson cut drawn for light surfaces and
+     * would be all but invisible there. An admin-uploaded logo cannot be
+     * assumed light-locked, so the layout wraps that one in a light plate
+     * instead; `logo_is_uploaded` tells it which treatment to use.
      *
      * @return array{logo_path: string, logo_url: string, logo_is_uploaded: bool}
      */
@@ -99,8 +101,8 @@ abstract class BookingMailable extends Mailable
         }
 
         return [
-            'logo_path' => public_path('images/brand/logo-mark.png'),
-            'logo_url' => url('/images/brand/logo-mark.png'),
+            'logo_path' => public_path('images/brand/logo-mark-light.png'),
+            'logo_url' => url('/images/brand/logo-mark-light.png'),
             'logo_is_uploaded' => false,
         ];
     }

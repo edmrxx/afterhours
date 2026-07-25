@@ -4,13 +4,13 @@ import Swal from 'sweetalert2';
 | useSwal — the single entry point for SweetAlert2 in the whole application.
 |
 | No page, component or layout may import `sweetalert2` directly. Everything
-| routes through here so the `phea-swal` / `phea-swal-toast` skins declared in
+| routes through here so the `ah-swal` / `ah-swal-toast` skins declared in
 | resources/css/app.css are applied consistently, and so button colours are read
 | from the Tailwind `@theme` tokens instead of being hardcoded.
 */
 
-const POPUP_CLASS = 'phea-swal';
-const TOAST_CLASS = 'phea-swal-toast';
+const POPUP_CLASS = 'ah-swal';
+const TOAST_CLASS = 'ah-swal-toast';
 
 /** Resolved design tokens, read once from the document and memoised. */
 let tokenCache = null;

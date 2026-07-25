@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
-            // Public identifier handed to the customer, format PHEA-XXXXXXXX.
+            // Public identifier handed to the customer, format AH-XXXXXXXX.
             $table->string('code', 32)->unique();
 
             // Restricted: a court or slot with booking history must never

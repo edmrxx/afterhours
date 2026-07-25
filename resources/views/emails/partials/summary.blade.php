@@ -78,13 +78,13 @@
     }
 @endphp
 
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; margin:0 0 28px; border:1px solid #E7E2CE; border-radius:12px; background-color:#F5F4F0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; margin:0 0 28px; border:1px solid #e4e4e6; border-radius:12px; background-color:#f6f6f7;">
     @foreach ($rows as $index => $row)
         <tr>
-            <td class="phea-stack" width="40%" style="padding:{{ $index === 0 ? '16px' : '12px' }} 20px 12px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; color:#5c5a52; {{ $loop->last ? 'padding-bottom:16px;' : 'border-bottom:1px solid #E7E2CE;' }}">
+            <td class="ah-stack" width="40%" style="padding:{{ $index === 0 ? '16px' : '12px' }} 20px 12px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; color:#5a5a5c; {{ $loop->last ? 'padding-bottom:16px;' : 'border-bottom:1px solid #e4e4e6;' }}">
                 {{ $row['label'] }}
             </td>
-            <td class="phea-stack" width="60%" align="right" style="padding:{{ $index === 0 ? '16px' : '12px' }} 20px 12px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:{{ $row['emphasise'] ? '14px' : '13px' }}; line-height:20px; color:#112250; font-weight:{{ $row['emphasise'] ? '700' : '600' }}; {{ $row['emphasise'] ? 'letter-spacing:0.4px;' : '' }} {{ $loop->last ? 'padding-bottom:16px;' : 'border-bottom:1px solid #E7E2CE;' }}">
+            <td class="ah-stack" width="60%" align="right" style="padding:{{ $index === 0 ? '16px' : '12px' }} 20px 12px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:{{ $row['emphasise'] ? '14px' : '13px' }}; line-height:20px; color:#000000; font-weight:{{ $row['emphasise'] ? '700' : '600' }}; {{ $row['emphasise'] ? 'letter-spacing:0.4px;' : '' }} {{ $loop->last ? 'padding-bottom:16px;' : 'border-bottom:1px solid #e4e4e6;' }}">
                 {!! $row['raw'] ?? e($row['value']) !!}
             </td>
         </tr>

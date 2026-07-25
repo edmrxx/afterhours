@@ -143,11 +143,11 @@ class Booking extends Model
     {
         $stored = app(SettingsService::class)->get(Setting::GROUP_SYSTEM, 'booking_code_prefix');
 
-        return mb_strtoupper((string) ($stored ?: config('booking.code_prefix', 'PHEA')));
+        return mb_strtoupper((string) ($stored ?: config('booking.code_prefix', 'AH')));
     }
 
     /**
-     * Public booking reference, e.g. PHEA-K7M4XQ9B. Retries on the (vanishingly
+     * Public booking reference, e.g. AH-K7M4XQ9B. Retries on the (vanishingly
      * unlikely) collision rather than trusting randomness to be unique.
      *
      * @throws RuntimeException when the generator cannot find a free code

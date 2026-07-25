@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * Club-wide court pricing.
  *
- * Pricing in PHEA is GLOBAL, not per court: every court charges the same, so the
+ * Pricing in After Hours is GLOBAL, not per court: every court charges the same, so the
  * rate table lives in settings (Admin > Settings > Booking) rather than on the
  * court row. There are exactly two tiers — non-peak and peak — and each owns a
  * money rate plus a clock window the admin can move.

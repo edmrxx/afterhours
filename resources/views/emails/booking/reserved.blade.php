@@ -21,11 +21,11 @@ We're holding {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ $summar
         </tr>
     </table>
 
-    <h1 style="margin:0 0 12px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:24px; line-height:32px; font-weight:700; color:#112250; letter-spacing:-0.4px;">
+    <h1 style="margin:0 0 12px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:24px; line-height:32px; font-weight:700; color:#000000; letter-spacing:-0.4px;">
         Almost there, {{ $summary['customer_first_name'] }}.
     </h1>
 
-    <p style="margin:0 0 26px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:15px; line-height:24px; color:#3f3d37;">
+    <p style="margin:0 0 26px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:15px; line-height:24px; color:#3d3d3f;">
         {{-- The payer has not picked a wallet yet at this point in the funnel, so this
              mail must not name one: the booking page is where the QR choice lives. --}}
         We're holding your {{ $summary['is_multi_court'] ? 'courts' : 'court' }} while you pay. Send your payment and upload a screenshot of your receipt
@@ -39,10 +39,10 @@ We're holding {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ $summar
                 <p style="margin:0 0 5px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:11px; line-height:16px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:0.6px;">
                     Pay by
                 </p>
-                <p style="margin:0; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:16px; line-height:24px; font-weight:700; color:#112250;">
+                <p style="margin:0; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:16px; line-height:24px; font-weight:700; color:#000000;">
                     {{ $summary['hold_expires_at'] }}
                 </p>
-                <p style="margin:6px 0 0; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; color:#5c5a52;">
+                <p style="margin:6px 0 0; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; color:#5a5a5c;">
                     That's about {{ $holdMinutes }} minutes from when you reserved.
                 </p>
             </td>
@@ -52,12 +52,12 @@ We're holding {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ $summar
     @include('emails.partials.summary', ['summary' => $summary])
 
     {{-- Amount due --}}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; margin:0 0 28px; background-color:#E7E2CE; border-radius:12px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; margin:0 0 28px; background-color:#e4e4e6; border-radius:12px;">
         <tr>
-            <td style="padding:18px 20px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; color:#5c5a52;">
+            <td style="padding:18px 20px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; color:#5a5a5c;">
                 Amount due
             </td>
-            <td align="right" class="phea-amount" style="padding:18px 20px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:24px; line-height:28px; font-weight:700; color:#112250; letter-spacing:-0.5px;">
+            <td align="right" class="ah-amount" style="padding:18px 20px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:24px; line-height:28px; font-weight:700; color:#000000; letter-spacing:-0.5px;">
                 {{ $summary['amount'] }}
             </td>
         </tr>
@@ -66,7 +66,7 @@ We're holding {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ $summar
     @if ($paymentUrl)
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
             <tr>
-                <td style="background-color:#112250; border-radius:10px;">
+                <td style="background-color:#781714; border-radius:10px;">
                     <a href="{{ $paymentUrl }}" target="_blank" rel="noopener"
                        style="display:inline-block; padding:13px 26px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:14px; line-height:20px; font-weight:600; color:#ffffff; text-decoration:none;">
                         Pay now
@@ -76,10 +76,10 @@ We're holding {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ $summar
         </table>
     @endif
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-top:1px solid #E7E2CE;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-top:1px solid #e4e4e6;">
         <tr>
             <td style="padding:22px 0 0;">
-                <p style="margin:0; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:21px; color:#5c5a52;">
+                <p style="margin:0; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:21px; color:#5a5a5c;">
                     Changed your mind? You can cancel the hold from your booking page — reply to this
                     email or give us a call if you need help.
                 </p>

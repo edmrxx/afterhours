@@ -31,7 +31,7 @@ class NewBookingSubmitted extends BookingNotification
 
         return sprintf(
             '%s: New payment to verify. %s - %s, %s %s. Ref %s, %s.',
-            (string) config('app.name', 'PHEA'),
+            (string) config('app.name', 'After Hours'),
             (string) $summary['code'],
             (string) $summary['court_name'],
             (string) $summary['date_short'],

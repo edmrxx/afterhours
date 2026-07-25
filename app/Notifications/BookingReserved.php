@@ -24,7 +24,7 @@ class BookingReserved extends BookingNotification
     {
         $summary = $this->summary();
 
-        $appName = (string) config('app.name', 'PHEA');
+        $appName = (string) config('app.name', 'After Hours');
 
         // A cross-court booking cannot be described by one court plus one time
         // range: "Court 1 - 3 Aug, 9AM, 2PM" hides which time belongs to which

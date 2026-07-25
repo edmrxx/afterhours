@@ -227,7 +227,7 @@ const addressLines = computed(() =>
                                 <FormInput
                                     v-model="form.company_name"
                                     label="Display name"
-                                    placeholder="The Paddle Room"
+                                    placeholder="After Hours"
                                     required
                                     :disabled="!canUpdate"
                                     :icon="Store"
@@ -238,7 +238,7 @@ const addressLines = computed(() =>
                                 <FormInput
                                     v-model="form.company_legal_name"
                                     label="Registered legal name"
-                                    placeholder="The Paddle Room Sports Ventures Inc."
+                                    placeholder="After Hours Sports Ventures Inc."
                                     :disabled="!canUpdate"
                                     :icon="Building2"
                                     :error="form.errors.company_legal_name"
@@ -329,7 +329,7 @@ const addressLines = computed(() =>
                                     v-model="form.company_email"
                                     label="Contact email"
                                     type="email"
-                                    placeholder="hello@phea.ph"
+                                    placeholder="hello@afterhours.ph"
                                     autocomplete="off"
                                     required
                                     :disabled="!canUpdate"

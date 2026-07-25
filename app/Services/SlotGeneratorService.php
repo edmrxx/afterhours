@@ -15,7 +15,7 @@ use App\Services\PricingService;
 /**
  * The bulk slot generator.
  *
- * Slots in PHEA are entirely admin defined — there is no system-wide interval.
+ * Slots in After Hours are entirely admin defined — there is no system-wide interval.
  * An operator describes a pattern ("weekdays, 6am to 10pm, 60 minute slots")
  * and this service materialises it across a date range.
  *

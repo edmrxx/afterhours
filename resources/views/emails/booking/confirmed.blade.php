@@ -21,11 +21,11 @@ Payment verified — {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ 
         </tr>
     </table>
 
-    <h1 style="margin:0 0 12px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:24px; line-height:32px; font-weight:700; color:#112250; letter-spacing:-0.4px;">
+    <h1 style="margin:0 0 12px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:24px; line-height:32px; font-weight:700; color:#000000; letter-spacing:-0.4px;">
         You&rsquo;re all set, {{ $summary['customer_first_name'] }}.
     </h1>
 
-    <p style="margin:0 0 26px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:15px; line-height:24px; color:#3f3d37;">
+    <p style="margin:0 0 26px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:15px; line-height:24px; color:#3d3d3f;">
         We&rsquo;ve verified your payment and locked in your {{ $summary['is_multi_court'] ? 'courts' : 'court' }}. Here are the details &mdash;
         just show your booking code when you arrive.
     </p>
@@ -33,12 +33,12 @@ Payment verified — {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ 
     @include('emails.partials.summary', ['summary' => $summary, 'showPayment' => true])
 
     {{-- Amount paid --}}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; margin:0 0 28px; background-color:#E7E2CE; border-radius:12px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; margin:0 0 28px; background-color:#e4e4e6; border-radius:12px;">
         <tr>
-            <td style="padding:18px 20px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; color:#5c5a52;">
+            <td style="padding:18px 20px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; color:#5a5a5c;">
                 Amount paid
             </td>
-            <td align="right" class="phea-amount" style="padding:18px 20px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:24px; line-height:28px; font-weight:700; color:#112250; letter-spacing:-0.5px;">
+            <td align="right" class="ah-amount" style="padding:18px 20px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:24px; line-height:28px; font-weight:700; color:#000000; letter-spacing:-0.5px;">
                 {{ $summary['amount'] }}
             </td>
         </tr>
@@ -47,7 +47,7 @@ Payment verified — {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ 
     @if ($statusUrl)
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
             <tr>
-                <td style="background-color:#112250; border-radius:10px;">
+                <td style="background-color:#781714; border-radius:10px;">
                     <a href="{{ $statusUrl }}" target="_blank" rel="noopener"
                        style="display:inline-block; padding:13px 26px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:14px; line-height:20px; font-weight:600; color:#ffffff; text-decoration:none;">
                         View my booking
@@ -58,19 +58,19 @@ Payment verified — {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ 
     @endif
 
     {{-- Good-to-know --}}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-top:1px solid #E7E2CE;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-top:1px solid #e4e4e6;">
         <tr>
             <td style="padding:22px 0 0;">
-                <p style="margin:0 0 10px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; font-weight:700; color:#112250;">
+                <p style="margin:0 0 10px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; font-weight:700; color:#000000;">
                     Before you play
                 </p>
-                <p style="margin:0 0 6px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:21px; color:#5c5a52;">
+                <p style="margin:0 0 6px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:21px; color:#5a5a5c;">
                     &bull;&nbsp; Arrive about 10 minutes early so you can start on time.
                 </p>
-                <p style="margin:0 0 6px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:21px; color:#5c5a52;">
-                    &bull;&nbsp; Keep booking code <strong style="color:#112250;">{{ $summary['code'] }}</strong> handy at the desk.
+                <p style="margin:0 0 6px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:21px; color:#5a5a5c;">
+                    &bull;&nbsp; Keep booking code <strong style="color:#000000;">{{ $summary['code'] }}</strong> handy at the desk.
                 </p>
-                <p style="margin:0; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:21px; color:#5c5a52;">
+                <p style="margin:0; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:13px; line-height:21px; color:#5a5a5c;">
                     &bull;&nbsp; Need to change something? Reply to this email or give us a call.
                 </p>
             </td>

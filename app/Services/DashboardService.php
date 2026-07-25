@@ -32,7 +32,7 @@ class DashboardService
     /** Seconds the aggregate payloads stay warm. */
     private const CACHE_TTL = 60;
 
-    private const CACHE_PREFIX = 'phea.dashboard';
+    private const CACHE_PREFIX = 'afterhours.dashboard';
 
     /** Latest audit entries shown in the activity feed. */
     private const ACTIVITY_LIMIT = 8;

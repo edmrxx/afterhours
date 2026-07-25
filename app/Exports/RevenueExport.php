@@ -42,7 +42,7 @@ final class RevenueExport
     public function filename(array $filters): string
     {
         return sprintf(
-            'phea-revenue-report_%s_%s_to_%s.csv',
+            'afterhours-revenue-report_%s_%s_to_%s.csv',
             (string) ($filters['granularity'] ?? 'day'),
             (string) $filters['date_from'],
             (string) $filters['date_to'],

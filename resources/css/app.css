@@ -7,7 +7,7 @@
 @source "../**/*.vue";
 
 /*
-| PHEA design tokens
+| After Hours design tokens
 |
 | Tailwind v4 is CSS-first: everything declared in @theme becomes a real
 | utility (bg-brand-600, text-ink-500, shadow-card, ...). Keep design
@@ -15,107 +15,121 @@
 */
 @theme {
     /* ------------------------------------------------------------------
-       THE PADDLE ROOM — client-approved brand palette.
+       AFTER HOURS — client-approved brand palette.
+       "play beyond the 9-to-5"
 
-         Navy Blue   #112250   brand-600 / navy-900   anchor, primary action
-         Sapphire    #3B507D   brand-500 / sapphire-500
-         Warm Taupe  #BEB7A7   taupe-500              warm accent
-         Champagne   #E7E2CE   ivory-300              mid warm-neutral step
-         Ivory       #F5F4F0   ivory-100              public page background
+         Dark Red    #781714   brand-600                anchor, primary action
+         Dark Grey   #48494B   graphite-500             secondary neutral
+         Black       #000000   noir-900                 deepest surface
+         White       #FFFFFF   text on every dark fill
 
        Anchor steps are written as literal hex so the client's exact sRGB
        values ship in the product; interpolated steps use oklch().
 
-       CONTRAST: white on Warm Taupe is ~1.9:1 and FAILS WCAG. Every
-       taupe-filled surface must carry NAVY text (~8.1:1). Primary CTAs on
-       light backgrounds are navy-filled with white text; taupe is reserved
-       for kickers, rules, accent borders, hover washes, and navy-text chips.
+       The palette is deliberately monochrome apart from the crimson: every
+       non-brand ramp sits at near-zero chroma on hue 264, so the only real
+       colour on any screen is the brand itself and it never has to compete.
+
+       CONTRAST (measured, not estimated): white on Dark Red is 10.9:1 and
+       white on Dark Grey is 9.0:1, so crimson and graphite fills both take
+       WHITE text — this palette inverts the old one, where the accent fill
+       needed dark text. The one exception is ash-*: white on ash-500 is
+       2.1:1 and FAILS WCAG, so ash-filled surfaces must carry NOIR text
+       (9.8:1). Ash is reserved for kickers, rules, accent borders, hover
+       washes and noir-text chips.
        ------------------------------------------------------------------ */
 
-    /* Brand — re-anchored onto the Navy/Sapphire family. The whole admin app
-       references brand-* already, so these values rebrand it wholesale. */
-    --color-brand-50: oklch(0.972 0.01 265);
-    --color-brand-100: oklch(0.935 0.022 265);
-    --color-brand-200: oklch(0.865 0.04 265);
-    --color-brand-300: oklch(0.755 0.06 265);
-    --color-brand-400: oklch(0.605 0.075 264.5);
-    --color-brand-500: #3b507d; /* Sapphire — hovers, focus rings, charts */
-    --color-brand-600: #112250; /* Navy Blue — primary buttons, active states */
-    --color-brand-700: oklch(0.225 0.08 265);
-    --color-brand-800: oklch(0.185 0.068 265);
-    --color-brand-900: oklch(0.15 0.052 265);
+    /* Brand — the crimson. The whole admin app references brand-* already, so
+       these values rebrand it wholesale. 600 is the anchor; 500 is the lifted
+       step used for hovers and focus rings. */
+    --color-brand-50: oklch(0.965 0.014 28);
+    --color-brand-100: oklch(0.928 0.03 28);
+    --color-brand-200: oklch(0.862 0.055 28);
+    --color-brand-300: oklch(0.765 0.088 28);
+    --color-brand-400: oklch(0.585 0.135 28);
+    --color-brand-500: oklch(0.455 0.15 28); /* lifted crimson — hovers, focus rings, charts */
+    --color-brand-600: #781714; /* Dark Red — primary buttons, active states */
+    --color-brand-700: oklch(0.315 0.113 28);
+    --color-brand-800: oklch(0.262 0.092 28);
+    --color-brand-900: oklch(0.215 0.072 28);
 
-    /* Ink — neutral text/surface ramp. Hue nudged from cool slate (265) to a
-       warm taupe-leaning grey (85) to sit with ivory/taupe. Lightness values
-       are unchanged, so every existing text-contrast relationship holds. */
-    --color-ink-50: oklch(0.985 0.002 85);
-    --color-ink-100: oklch(0.968 0.004 85);
-    --color-ink-200: oklch(0.928 0.006 85);
-    --color-ink-300: oklch(0.87 0.009 85);
-    --color-ink-400: oklch(0.71 0.014 85);
-    --color-ink-500: oklch(0.56 0.016 85);
-    --color-ink-600: oklch(0.44 0.018 85);
-    --color-ink-700: oklch(0.37 0.019 85);
-    --color-ink-800: oklch(0.28 0.018 85);
-    --color-ink-900: oklch(0.21 0.016 85);
+    /* Ink — neutral text/surface ramp. Hue returns to a neutral 264 with the
+       chroma pulled almost to zero, so body copy reads as true grey next to
+       the crimson. Lightness values are unchanged from the previous palette,
+       so every existing text-contrast relationship still holds. */
+    --color-ink-50: oklch(0.985 0.001 264);
+    --color-ink-100: oklch(0.968 0.0015 264);
+    --color-ink-200: oklch(0.928 0.002 264);
+    --color-ink-300: oklch(0.87 0.003 264);
+    --color-ink-400: oklch(0.71 0.004 264);
+    --color-ink-500: oklch(0.56 0.005 264);
+    --color-ink-600: oklch(0.44 0.005 264);
+    --color-ink-700: oklch(0.37 0.005 264);
+    --color-ink-800: oklch(0.28 0.004 264);
+    --color-ink-900: oklch(0.21 0.004 264);
 
-    /* Ivory — warm page-background ramp for public marketing surfaces.
-       (Renamed from sand-*.) ivory-100 is Ivory, ivory-300 is Champagne. */
-    --color-ivory-50: oklch(0.985 0.003 95);
-    --color-ivory-100: #f5f4f0; /* Ivory */
-    --color-ivory-200: oklch(0.94 0.014 95);
-    --color-ivory-300: #e7e2ce; /* Champagne */
-    --color-ivory-400: oklch(0.855 0.028 92);
-    --color-ivory-500: oklch(0.78 0.028 89);
-    --color-ivory-600: oklch(0.65 0.028 85);
-    --color-ivory-700: oklch(0.52 0.026 82);
-    --color-ivory-800: oklch(0.39 0.022 78);
-    --color-ivory-900: oklch(0.28 0.018 75);
+    /* Bone — near-white page-background ramp for public marketing surfaces.
+       (Renamed from ivory-*.) bone-100 is the public page background,
+       bone-300 the mid step used for rules and card borders. */
+    --color-bone-50: oklch(0.988 0.001 264);
+    --color-bone-100: #f6f6f7; /* public page background */
+    --color-bone-200: oklch(0.945 0.0018 264);
+    --color-bone-300: #e4e4e6; /* rules, borders, mid neutral step */
+    --color-bone-400: oklch(0.862 0.0025 264);
+    --color-bone-500: oklch(0.788 0.003 264);
+    --color-bone-600: oklch(0.658 0.0032 264);
+    --color-bone-700: oklch(0.528 0.003 264);
+    --color-bone-800: oklch(0.398 0.0028 264);
+    --color-bone-900: oklch(0.288 0.0025 264);
 
-    /* Taupe — the warm accent ramp. (Renamed from gold-*; this REPLACES the
-       old gold accent.) taupe-500 is Warm Taupe. Never white text on it. */
-    --color-taupe-50: oklch(0.975 0.006 90);
-    --color-taupe-100: oklch(0.945 0.011 90);
-    --color-taupe-200: oklch(0.9 0.016 89);
-    --color-taupe-300: oklch(0.855 0.02 88);
-    --color-taupe-400: oklch(0.818 0.022 88);
-    --color-taupe-500: #beb7a7; /* Warm Taupe */
-    --color-taupe-600: oklch(0.66 0.026 85);
-    --color-taupe-700: oklch(0.545 0.026 82);
-    --color-taupe-800: oklch(0.425 0.024 78);
-    --color-taupe-900: oklch(0.32 0.02 75);
+    /* Ash — the light neutral accent ramp. (Renamed from taupe-*.) ash-500
+       matches the grey of the net in the logo mark. Never white text on it. */
+    --color-ash-50: oklch(0.975 0.001 264);
+    --color-ash-100: oklch(0.948 0.0015 264);
+    --color-ash-200: oklch(0.905 0.002 264);
+    --color-ash-300: oklch(0.862 0.0025 264);
+    --color-ash-400: oklch(0.822 0.003 264);
+    --color-ash-500: #b0b1b4; /* logo net grey */
+    --color-ash-600: oklch(0.665 0.0035 264);
+    --color-ash-700: oklch(0.552 0.0035 264);
+    --color-ash-800: oklch(0.432 0.0032 264);
+    --color-ash-900: oklch(0.328 0.003 264);
 
-    /* Navy — dark surface ramp for heros, footers, dark bands and the login
-       backdrop. navy-900 is the canonical brand Navy and the darkest step:
-       the anchor IS the deepest surface, so nothing goes darker than brand. */
-    --color-navy-50: oklch(0.965 0.011 265);
-    --color-navy-100: oklch(0.925 0.024 265);
-    --color-navy-200: oklch(0.855 0.042 265);
-    --color-navy-300: oklch(0.745 0.062 265);
-    --color-navy-400: oklch(0.6 0.077 264);
-    --color-navy-500: oklch(0.47 0.084 265);
-    --color-navy-600: oklch(0.4 0.086 265);
-    --color-navy-700: oklch(0.34 0.088 265);
-    --color-navy-800: oklch(0.3 0.088 265);
-    --color-navy-900: #112250; /* Navy Blue */
+    /* Noir — dark surface ramp for heros, footers, dark bands and the login
+       backdrop. (Renamed from navy-*.) noir-900 is the brand Black and the
+       darkest step: the anchor IS the deepest surface, so nothing goes darker
+       than brand. noir-800 is the lifted near-black used for cards and
+       elevated panels sitting on top of a noir-900 field. */
+    --color-noir-50: oklch(0.962 0.002 264);
+    --color-noir-100: oklch(0.918 0.003 264);
+    --color-noir-200: oklch(0.845 0.004 264);
+    --color-noir-300: oklch(0.73 0.005 264);
+    --color-noir-400: oklch(0.585 0.006 264);
+    --color-noir-500: oklch(0.46 0.007 264);
+    --color-noir-600: oklch(0.385 0.007 264);
+    --color-noir-700: oklch(0.315 0.006 264);
+    --color-noir-800: oklch(0.235 0.005 264);
+    --color-noir-900: #000000; /* Black */
 
-    /* Sapphire — mid-blue ramp for secondary/hover states, chart series and
-       muted dark accents. sapphire-500 is the brand Sapphire. */
-    --color-sapphire-50: oklch(0.968 0.01 264);
-    --color-sapphire-100: oklch(0.935 0.022 264);
-    --color-sapphire-200: oklch(0.875 0.04 264);
-    --color-sapphire-300: oklch(0.775 0.058 264);
-    --color-sapphire-400: oklch(0.61 0.073 264);
-    --color-sapphire-500: #3b507d; /* Sapphire */
-    --color-sapphire-600: oklch(0.38 0.078 264);
-    --color-sapphire-700: oklch(0.325 0.075 264);
-    --color-sapphire-800: oklch(0.265 0.065 265);
-    --color-sapphire-900: oklch(0.21 0.052 266);
+    /* Graphite — mid-grey ramp for secondary/hover states, chart series and
+       muted dark accents. (Renamed from sapphire-*.) graphite-500 is the
+       brand Dark Grey. */
+    --color-graphite-50: oklch(0.968 0.002 264);
+    --color-graphite-100: oklch(0.935 0.0025 264);
+    --color-graphite-200: oklch(0.878 0.003 264);
+    --color-graphite-300: oklch(0.78 0.0035 264);
+    --color-graphite-400: oklch(0.6 0.0036 264);
+    --color-graphite-500: #48494b; /* Dark Grey */
+    --color-graphite-600: oklch(0.352 0.0035 264);
+    --color-graphite-700: oklch(0.298 0.003 264);
+    --color-graphite-800: oklch(0.245 0.0028 264);
+    --color-graphite-900: oklch(0.195 0.0025 264);
 
     /* Semantic status colours — booking states lean on these. Names, steps and
-       LIGHTNESS are unchanged; success/warn had their chroma pulled in slightly
-       so they read as part of the muted navy/ivory family rather than shouting
-       over it. danger/info were already in family and are untouched. */
+       LIGHTNESS are unchanged. danger stays a bright, high-chroma red so it
+       never reads as the brand: brand-600 is dark and muted (L .37 / C .135)
+       where danger-500 is light and vivid (L .63 / C .21), which is what keeps
+       a validation error visually distinct from a primary button. */
     --color-success-50: oklch(0.96 0.026 158);
     --color-success-500: oklch(0.65 0.14 158);
     --color-success-600: oklch(0.57 0.132 158);
@@ -144,14 +158,15 @@
     --font-display: 'Archivo', ui-sans-serif, system-ui, -apple-system,
         'Segoe UI', sans-serif;
 
-    /* Elevation — soft, diffuse, SaaS-like. Never harsh drop shadows. */
-    --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04),
-        0 1px 3px 0 rgb(15 23 42 / 0.06);
-    --shadow-card-hover: 0 4px 6px -1px rgb(15 23 42 / 0.07),
-        0 2px 4px -2px rgb(15 23 42 / 0.05);
-    --shadow-float: 0 10px 15px -3px rgb(15 23 42 / 0.08),
-        0 4px 6px -4px rgb(15 23 42 / 0.06);
-    --shadow-modal: 0 25px 50px -12px rgb(15 23 42 / 0.2);
+    /* Elevation — soft, diffuse, SaaS-like. Never harsh drop shadows. Tinted
+       near-black rather than pure black so stacked shadows stay soft. */
+    --shadow-card: 0 1px 2px 0 rgb(9 9 11 / 0.04),
+        0 1px 3px 0 rgb(9 9 11 / 0.06);
+    --shadow-card-hover: 0 4px 6px -1px rgb(9 9 11 / 0.07),
+        0 2px 4px -2px rgb(9 9 11 / 0.05);
+    --shadow-float: 0 10px 15px -3px rgb(9 9 11 / 0.08),
+        0 4px 6px -4px rgb(9 9 11 / 0.06);
+    --shadow-modal: 0 25px 50px -12px rgb(9 9 11 / 0.2);
 
     /* Motion */
     --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
@@ -239,29 +254,29 @@
 }
 
 /* SweetAlert2 restyled to match the design system rather than its stock look. */
-.swal2-popup.phea-swal {
+.swal2-popup.ah-swal {
     border-radius: 1rem;
     box-shadow: var(--shadow-modal);
     font-family: var(--font-sans);
     padding: 1.75rem;
 }
 
-.swal2-popup.phea-swal .swal2-title {
+.swal2-popup.ah-swal .swal2-title {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--color-ink-900);
 }
 
-.swal2-popup.phea-swal .swal2-html-container {
+.swal2-popup.ah-swal .swal2-html-container {
     font-size: 0.875rem;
     color: var(--color-ink-600);
 }
 
-.swal2-popup.phea-swal .swal2-actions {
+.swal2-popup.ah-swal .swal2-actions {
     gap: 0.5rem;
 }
 
-.swal2-popup.phea-swal .swal2-styled {
+.swal2-popup.ah-swal .swal2-styled {
     border-radius: 0.625rem;
     font-size: 0.875rem;
     font-weight: 500;
@@ -270,11 +285,11 @@
     transition: filter 0.15s var(--ease-out-soft);
 }
 
-.swal2-popup.phea-swal .swal2-styled:hover {
+.swal2-popup.ah-swal .swal2-styled:hover {
     filter: brightness(0.94);
 }
 
-.swal2-popup.phea-swal-toast {
+.swal2-popup.ah-swal-toast {
     border-radius: 0.75rem;
     box-shadow: var(--shadow-float);
     font-family: var(--font-sans);

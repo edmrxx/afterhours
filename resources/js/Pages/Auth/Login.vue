@@ -55,9 +55,11 @@ function fillDemoCredentials() {
         subheading="Sign in to manage courts, slots and bookings."
     >
         <!-- Animated brand rule: the only motion on an otherwise still card.
-             Navy → taupe → sapphire, the three circled brand colours. -->
+             Crimson → graphite → noir, the three circled brand colours, in
+             order of decreasing lightness. Ash is deliberately not a stop: it
+             is the logo's net grey, not one of the client's palette colours. -->
         <div
-            class="-mt-2 mb-6 h-1 w-full animate-shimmer rounded-full bg-gradient-to-r from-navy-900 via-taupe-500 to-sapphire-500 bg-[length:200%_100%]"
+            class="-mt-2 mb-6 h-1 w-full animate-shimmer rounded-full bg-gradient-to-r from-brand-600 via-graphite-500 to-noir-900 bg-[length:200%_100%]"
             aria-hidden="true"
         />
 

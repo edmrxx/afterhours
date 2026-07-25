@@ -644,7 +644,7 @@ const previewMessage = computed(() => {
                                     {{ peso.format(SAMPLE_AMOUNT) }}
                                 </p>
                                 <p class="mt-1 text-xs text-ink-400">
-                                    Sample amount · booking PHEA-7K4M2QX9
+                                    Sample amount · booking AH-7K4M2QX9
                                 </p>
 
                                 <!-- The switcher only appears once there is a real choice -->

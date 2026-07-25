@@ -124,35 +124,35 @@ const urgent = computed(() => !expired.value && remainingMs.value <= 5 * 60 * 10
 
 const holdTone = computed(() => (expired.value ? 'expired' : urgent.value ? 'urgent' : 'calm'));
 
-// The calm state is brand chrome (navy band, taupe accent); urgent/expired
+// The calm state is brand chrome (noir band, ash accent); urgent/expired
 // deliberately stay on the warn/danger semantics so the customer can read the
 // timer's seriousness at a glance rather than decoding the brand palette.
 const HOLD_WRAPPER = {
-    calm: 'bg-navy-900 ring-1 ring-inset ring-sapphire-700',
+    calm: 'bg-noir-900 ring-1 ring-inset ring-graphite-700',
     urgent: 'bg-warn-50 ring-1 ring-inset ring-warn-500/25',
     expired: 'bg-danger-50 ring-1 ring-inset ring-danger-500/20',
 };
 
 const HOLD_ICON = {
-    calm: 'bg-taupe-500/15 text-taupe-500',
+    calm: 'bg-ash-500/15 text-ash-500',
     urgent: 'bg-white text-warn-700 shadow-card',
     expired: 'bg-white text-danger-600 shadow-card',
 };
 
 const HOLD_TITLE = {
-    calm: 'text-ivory-50',
+    calm: 'text-bone-50',
     urgent: 'text-warn-700',
     expired: 'text-danger-700',
 };
 
 const HOLD_BODY = {
-    calm: 'text-ivory-300',
+    calm: 'text-bone-300',
     urgent: 'text-warn-700/90',
     expired: 'text-danger-700/90',
 };
 
 const HOLD_NUMBER = {
-    calm: 'text-taupe-500',
+    calm: 'text-ash-500',
     urgent: 'text-warn-700',
     expired: 'text-danger-700',
 };
@@ -288,14 +288,14 @@ const wizardSteps = [
 ];
 
 const CTA_BASE =
-    'inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55';
+    'inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55';
 
-/** Primary action: navy fill, white text (~15.7:1). */
-const primaryCta = `${CTA_BASE} bg-navy-900 text-white hover:bg-sapphire-500`;
+/** Primary action: noir fill, white text (21:1); the graphite hover holds 9.0:1. */
+const primaryCta = `${CTA_BASE} bg-brand-600 text-white hover:bg-brand-500`;
 
-/** Secondary action: taupe fill with NAVY text — white on taupe is ~1.9:1 and
- *  fails WCAG, so the taupe surface always carries navy lettering. */
-const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
+/** Secondary action: ash fill with NOIR text — white on ash-500 is ~1.9:1 and
+ *  fails WCAG, so the ash surface always carries noir lettering. */
+const ashCta = `${CTA_BASE} bg-ash-500 text-noir-900 hover:bg-ash-600`;
 </script>
 
 <template>
@@ -304,14 +304,14 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
             <Link
                 v-if="booking.court_slug"
                 :href="route('public.courts.show', { court: booking.court_slug })"
-                class="inline-flex w-fit items-center gap-1.5 rounded-lg text-sm font-medium text-navy-500 transition-colors hover:text-navy-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                class="inline-flex w-fit items-center gap-1.5 rounded-lg text-sm font-medium text-noir-500 transition-colors hover:text-noir-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
             >
                 <ArrowLeft :size="16" aria-hidden="true" />
                 Back to {{ booking.court_name }}
             </Link>
 
             <div
-                class="mt-4 rounded-xl border border-ivory-300/70 bg-white px-5 py-5 shadow-card sm:px-8"
+                class="mt-4 rounded-xl border border-bone-300/70 bg-white px-5 py-5 shadow-card sm:px-8"
             >
                 <ProgressSteps :steps="wizardSteps" :current="3" compact />
             </div>
@@ -373,7 +373,7 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                 ? route('public.courts.show', { court: booking.court_slug })
                                 : route('public.courts.index')
                         "
-                        :class="taupeCta"
+                        :class="ashCta"
                     >
                         Book another time
                     </Link>
@@ -384,23 +384,23 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                 <!-- ── Left: how to pay ──────────────────────────────── -->
                 <div class="lg:col-span-3">
                     <section
-                        class="overflow-hidden rounded-xl border border-ivory-300/70 bg-white shadow-card"
+                        class="overflow-hidden rounded-xl border border-bone-300/70 bg-white shadow-card"
                     >
                         <!-- SCAN TO PAY hero -->
                         <div
-                            class="bg-gradient-to-br from-navy-900 to-sapphire-700 px-5 py-7 text-center sm:px-8 sm:py-9"
+                            class="bg-gradient-to-br from-noir-900 to-graphite-700 px-5 py-7 text-center sm:px-8 sm:py-9"
                         >
-                            <!-- Dark surface: the light-locked mark sits bare, no plate. -->
+                            <!-- Dark surface: the white wordmark, sitting bare. -->
                             <img
-                                src="/images/brand/logo-mark.png"
-                                alt="The Paddle Room"
-                                width="231"
-                                height="178"
+                                src="/images/brand/logo-mark-light.png"
+                                alt="After Hours"
+                                width="960"
+                                height="463"
                                 class="mx-auto mb-4 h-auto w-24"
                             />
 
                             <p
-                                class="font-display-heading text-xs tracking-[0.2em] text-taupe-500"
+                                class="font-display-heading text-xs tracking-[0.2em] text-ash-500"
                             >
                                 Step 2 · {{ methodLabel ? `Pay via ${methodLabel}` : 'Send payment' }}
                             </p>
@@ -409,7 +409,7 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                             >
                                 Scan to pay {{ amount }}
                             </h2>
-                            <p class="mx-auto mt-2 max-w-md text-sm text-ivory-200">
+                            <p class="mx-auto mt-2 max-w-md text-sm text-bone-200">
                                 Open your {{ appLabel }} app, scan the code below, and send the
                                 exact amount so we can match it to your booking.
                             </p>
@@ -427,7 +427,7 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                 <p
                                     v-if="showMethodChooser"
                                     id="payment-method-label"
-                                    class="text-[11px] font-medium tracking-wide text-navy-500 uppercase"
+                                    class="text-[11px] font-medium tracking-wide text-noir-500 uppercase"
                                 >
                                     Pay with
                                 </p>
@@ -446,10 +446,10 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                         :class="[
                                             'flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold',
                                             'transition-colors duration-200 ease-[var(--ease-out-soft)]',
-                                            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900',
+                                            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900',
                                             method.key === selectedMethod?.key
-                                                ? 'border-navy-900 bg-navy-900 text-white shadow-card'
-                                                : 'border-ivory-300 bg-white text-navy-700 hover:border-navy-300 hover:shadow-card',
+                                                ? 'border-noir-900 bg-noir-900 text-white shadow-card'
+                                                : 'border-bone-300 bg-white text-noir-700 hover:border-noir-300 hover:shadow-card',
                                         ]"
                                         @click="selectMethod(method.key)"
                                     >
@@ -476,7 +476,7 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                 <div class="mx-auto shrink-0 sm:mx-0">
                                     <div
                                         v-if="selectedMethod?.qr_url"
-                                        class="rounded-xl border-2 border-taupe-400 bg-white p-3 shadow-card"
+                                        class="rounded-xl border-2 border-ash-400 bg-white p-3 shadow-card"
                                     >
                                         <img
                                             :src="selectedMethod.qr_url"
@@ -485,7 +485,7 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                         />
                                         <p
                                             v-if="selectedMethod.scan_hint"
-                                            class="mt-2 text-center text-[11px] text-navy-500"
+                                            class="mt-2 text-center text-[11px] text-noir-500"
                                         >
                                             {{ selectedMethod.scan_hint }}
                                         </p>
@@ -494,18 +494,18 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                     <!-- Graceful fallback when no QR is uploaded yet -->
                                     <div
                                         v-else
-                                        class="flex h-50 w-50 flex-col items-center justify-center rounded-xl border-2 border-dashed border-navy-200 bg-ivory-100/60 px-4 text-center"
+                                        class="flex h-50 w-50 flex-col items-center justify-center rounded-xl border-2 border-dashed border-noir-200 bg-bone-100/60 px-4 text-center"
                                     >
                                         <QrCode
                                             :size="26"
                                             :stroke-width="1.5"
-                                            class="text-navy-400"
+                                            class="text-noir-400"
                                             aria-hidden="true"
                                         />
-                                        <p class="mt-2 text-xs font-medium text-navy-700">
+                                        <p class="mt-2 text-xs font-medium text-noir-700">
                                             No QR code yet
                                         </p>
-                                        <p class="mt-1 text-[11px] leading-relaxed text-navy-500">
+                                        <p class="mt-1 text-[11px] leading-relaxed text-noir-500">
                                             Use the account details beside this box to send your
                                             payment.
                                         </p>
@@ -516,20 +516,20 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                 <dl class="min-w-0 flex-1 space-y-3">
                                     <div
                                         v-if="selectedMethod?.account_name"
-                                        class="rounded-lg border border-ivory-300 bg-ivory-100/60 p-3"
+                                        class="rounded-lg border border-bone-300 bg-bone-100/60 p-3"
                                     >
-                                        <dt class="text-[11px] tracking-wide text-navy-500 uppercase">
+                                        <dt class="text-[11px] tracking-wide text-noir-500 uppercase">
                                             Account name
                                         </dt>
                                         <dd
-                                            class="mt-0.5 flex items-center justify-between gap-2 text-sm font-medium text-navy-900"
+                                            class="mt-0.5 flex items-center justify-between gap-2 text-sm font-medium text-noir-900"
                                         >
                                             <span class="min-w-0 truncate">{{
                                                 selectedMethod.account_name
                                             }}</span>
                                             <button
                                                 type="button"
-                                                class="shrink-0 cursor-pointer rounded-md p-1.5 text-navy-400 transition-colors hover:bg-white hover:text-sapphire-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                                                class="shrink-0 cursor-pointer rounded-md p-1.5 text-noir-400 transition-colors hover:bg-white hover:text-graphite-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                                                 :aria-label="`Copy ${methodLabel} account name`"
                                                 @click="copy(selectedMethod.account_name, 'name')"
                                             >
@@ -544,20 +544,20 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
 
                                     <div
                                         v-if="selectedMethod?.account_number"
-                                        class="rounded-lg border border-ivory-300 bg-ivory-100/60 p-3"
+                                        class="rounded-lg border border-bone-300 bg-bone-100/60 p-3"
                                     >
-                                        <dt class="text-[11px] tracking-wide text-navy-500 uppercase">
+                                        <dt class="text-[11px] tracking-wide text-noir-500 uppercase">
                                             {{ selectedMethod.account_number_label }}
                                         </dt>
                                         <dd
-                                            class="mt-0.5 flex items-center justify-between gap-2 font-mono text-sm font-semibold tracking-wide text-navy-900"
+                                            class="mt-0.5 flex items-center justify-between gap-2 font-mono text-sm font-semibold tracking-wide text-noir-900"
                                         >
                                             <span class="min-w-0 truncate">{{
                                                 selectedMethod.account_number
                                             }}</span>
                                             <button
                                                 type="button"
-                                                class="shrink-0 cursor-pointer rounded-md p-1.5 text-navy-400 transition-colors hover:bg-white hover:text-sapphire-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                                                class="shrink-0 cursor-pointer rounded-md p-1.5 text-noir-400 transition-colors hover:bg-white hover:text-graphite-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                                                 :aria-label="`Copy ${selectedMethod.account_number_label}`"
                                                 @click="copy(selectedMethod.account_number, 'number')"
                                             >
@@ -570,17 +570,17 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                         </dd>
                                     </div>
 
-                                    <div class="rounded-lg border border-ivory-300 bg-ivory-100/60 p-3">
-                                        <dt class="text-[11px] tracking-wide text-navy-500 uppercase">
+                                    <div class="rounded-lg border border-bone-300 bg-bone-100/60 p-3">
+                                        <dt class="text-[11px] tracking-wide text-noir-500 uppercase">
                                             Booking code
                                         </dt>
                                         <dd
-                                            class="mt-0.5 flex items-center justify-between gap-2 font-mono text-sm font-semibold tracking-wide text-sapphire-500"
+                                            class="mt-0.5 flex items-center justify-between gap-2 font-mono text-sm font-semibold tracking-wide text-graphite-500"
                                         >
                                             <span class="min-w-0 truncate">{{ booking.code }}</span>
                                             <button
                                                 type="button"
-                                                class="shrink-0 cursor-pointer rounded-md p-1.5 text-navy-400 transition-colors hover:bg-white hover:text-sapphire-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                                                class="shrink-0 cursor-pointer rounded-md p-1.5 text-noir-400 transition-colors hover:bg-white hover:text-graphite-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                                                 aria-label="Copy booking code"
                                                 @click="copy(booking.code, 'code')"
                                             >
@@ -638,16 +638,16 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                             <!-- Free-text instructions from settings -->
                             <div
                                 v-if="payment.instructions"
-                                class="mt-5 rounded-lg border border-ivory-300 bg-white p-4"
+                                class="mt-5 rounded-lg border border-bone-300 bg-white p-4"
                             >
                                 <h3
-                                    class="flex items-center gap-2 text-xs font-semibold tracking-wide text-navy-500 uppercase"
+                                    class="flex items-center gap-2 text-xs font-semibold tracking-wide text-noir-500 uppercase"
                                 >
                                     <Smartphone :size="14" aria-hidden="true" />
                                     Payment instructions
                                 </h3>
                                 <p
-                                    class="mt-2 text-sm leading-relaxed whitespace-pre-line text-navy-700"
+                                    class="mt-2 text-sm leading-relaxed whitespace-pre-line text-noir-700"
                                 >
                                     {{ payment.instructions }}
                                 </p>
@@ -657,18 +657,18 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
 
                     <!-- ── Proof of payment form ─────────────────────── -->
                     <section
-                        class="mt-5 overflow-hidden rounded-xl border-2 border-taupe-400 bg-white shadow-card"
+                        class="mt-5 overflow-hidden rounded-xl border-2 border-ash-400 bg-white shadow-card"
                     >
-                        <header class="border-b border-taupe-200 bg-taupe-50 px-5 py-4 sm:px-6">
+                        <header class="border-b border-ash-200 bg-ash-50 px-5 py-4 sm:px-6">
                             <h2
-                                class="font-display-heading text-sm tracking-wide text-navy-900"
+                                class="font-display-heading text-sm tracking-wide text-noir-900"
                             >
                                 Upload your {{ appLabel }} receipt
                             </h2>
-                            <p class="mt-0.5 flex items-start gap-1.5 text-xs text-navy-600">
+                            <p class="mt-0.5 flex items-start gap-1.5 text-xs text-noir-600">
                                 <ShieldCheck
                                     :size="14"
-                                    class="mt-0.5 shrink-0 text-sapphire-500"
+                                    class="mt-0.5 shrink-0 text-graphite-500"
                                     aria-hidden="true"
                                 />
                                 Already sent your payment? Upload a screenshot of your
@@ -704,7 +704,7 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                 Submit payment details
                             </button>
 
-                            <p class="mt-3 text-center text-xs leading-relaxed text-navy-500">
+                            <p class="mt-3 text-center text-xs leading-relaxed text-noir-500">
                                 We hold your slot while our team verifies the payment, and text
                                 you the moment it is confirmed.
                             </p>
@@ -715,48 +715,48 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                 <!-- ── Right: booking summary ────────────────────────── -->
                 <aside class="lg:col-span-2">
                     <div
-                        class="overflow-hidden rounded-xl border border-ivory-300/70 bg-white shadow-card lg:sticky lg:top-24"
+                        class="overflow-hidden rounded-xl border border-bone-300/70 bg-white shadow-card lg:sticky lg:top-24"
                     >
-                        <header class="border-b border-ivory-300/70 px-5 py-4">
-                            <h2 class="font-display-heading text-sm text-navy-900">
+                        <header class="border-b border-bone-300/70 px-5 py-4">
+                            <h2 class="font-display-heading text-sm text-noir-900">
                                 Your booking
                             </h2>
                         </header>
 
-                        <dl class="divide-y divide-ivory-300/70">
+                        <dl class="divide-y divide-bone-300/70">
                             <div class="px-5 py-3.5">
-                                <dt class="text-xs text-navy-500">Booking code</dt>
+                                <dt class="text-xs text-noir-500">Booking code</dt>
                                 <dd
-                                    class="mt-0.5 font-mono text-base font-semibold tracking-wide text-sapphire-500"
+                                    class="mt-0.5 font-mono text-base font-semibold tracking-wide text-graphite-500"
                                 >
                                     {{ booking.code }}
                                 </dd>
                             </div>
 
                             <div class="px-5 py-3.5">
-                                <dt class="text-xs text-navy-500">
+                                <dt class="text-xs text-noir-500">
                                     {{ booking.is_multi_court ? 'Courts' : 'Court' }}
                                 </dt>
                                 <!-- A booking may span more than one court; the
                                      guest is paying for all of them, so name
                                      every one. Single-court is unchanged. -->
-                                <dd class="mt-0.5 text-sm font-medium text-navy-900">
+                                <dd class="mt-0.5 text-sm font-medium text-noir-900">
                                     {{ booking.is_multi_court ? booking.court_names.join(', ') : booking.court_name }}
                                 </dd>
                             </div>
 
                             <div class="px-5 py-3.5">
-                                <dt class="flex items-center gap-1.5 text-xs text-navy-500">
+                                <dt class="flex items-center gap-1.5 text-xs text-noir-500">
                                     <CalendarDays :size="13" aria-hidden="true" />
                                     Date
                                 </dt>
-                                <dd class="mt-0.5 text-sm font-medium text-navy-900">
+                                <dd class="mt-0.5 text-sm font-medium text-noir-900">
                                     {{ booking.date ?? '—' }}
                                 </dd>
                             </div>
 
                             <div class="px-5 py-3.5">
-                                <dt class="flex items-center gap-1.5 text-xs text-navy-500">
+                                <dt class="flex items-center gap-1.5 text-xs text-noir-500">
                                     <Clock :size="13" aria-hidden="true" />
                                     Time
                                 </dt>
@@ -770,38 +770,38 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                                     <p
                                         v-for="(slot, index) in booking.slots"
                                         :key="`${index}-${slot.time_range}`"
-                                        class="text-sm font-medium text-navy-900"
+                                        class="text-sm font-medium text-noir-900"
                                     >
                                         {{ booking.is_multi_court ? `${slot.court_name} · ${slot.time_range}` : slot.time_range }}
                                     </p>
                                 </dd>
-                                <dd v-else class="mt-0.5 text-sm font-medium text-navy-900">
+                                <dd v-else class="mt-0.5 text-sm font-medium text-noir-900">
                                     {{ booking.time_range ?? '—' }}
-                                    <span v-if="booking.duration_minutes" class="text-navy-500">
+                                    <span v-if="booking.duration_minutes" class="text-noir-500">
                                         · {{ booking.duration_minutes }} min
                                     </span>
                                 </dd>
                             </div>
 
                             <div class="px-5 py-3.5">
-                                <dt class="text-xs text-navy-500">Booked for</dt>
-                                <dd class="mt-0.5 text-sm font-medium text-navy-900">
+                                <dt class="text-xs text-noir-500">Booked for</dt>
+                                <dd class="mt-0.5 text-sm font-medium text-noir-900">
                                     {{ booking.customer_name }}
                                 </dd>
-                                <dd class="mt-0.5 text-xs text-navy-500">
+                                <dd class="mt-0.5 text-xs text-noir-500">
                                     {{ booking.customer_phone }}
                                 </dd>
                             </div>
 
-                            <div class="flex items-center justify-between bg-ivory-100/60 px-5 py-4">
-                                <dt class="text-sm font-medium text-navy-700">Total</dt>
-                                <dd class="text-lg font-semibold tabular-nums text-navy-900">
+                            <div class="flex items-center justify-between bg-bone-100/60 px-5 py-4">
+                                <dt class="text-sm font-medium text-noir-700">Total</dt>
+                                <dd class="text-lg font-semibold tabular-nums text-noir-900">
                                     {{ amount }}
                                 </dd>
                             </div>
                         </dl>
 
-                        <div class="border-t border-ivory-300/70 p-4">
+                        <div class="border-t border-bone-300/70 p-4">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -811,18 +811,18 @@ const taupeCta = `${CTA_BASE} bg-taupe-500 text-navy-900 hover:bg-taupe-600`;
                             >
                                 Cancel this booking
                             </Button>
-                            <p class="mt-2 text-center text-[11px] leading-relaxed text-navy-400">
+                            <p class="mt-2 text-center text-[11px] leading-relaxed text-noir-400">
                                 Changed your mind? Release the slot so another player can take it.
                             </p>
                         </div>
                     </div>
 
                     <p
-                        class="mt-4 flex items-start gap-2 px-1 text-xs leading-relaxed text-navy-500"
+                        class="mt-4 flex items-start gap-2 px-1 text-xs leading-relaxed text-noir-500"
                     >
                         <TriangleAlert
                             :size="14"
-                            class="mt-0.5 shrink-0 text-navy-400"
+                            class="mt-0.5 shrink-0 text-noir-400"
                             aria-hidden="true"
                         />
                         Keep your booking code. It is the only thing you need to check this

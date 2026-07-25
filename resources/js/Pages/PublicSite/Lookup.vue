@@ -17,7 +17,7 @@ import FormInput from '@/Components/FormInput.vue';
 */
 
 const props = defineProps({
-    codePrefix: { type: String, default: 'PHEA' },
+    codePrefix: { type: String, default: 'AH' },
 });
 
 const form = useForm({
@@ -36,26 +36,26 @@ function submit() {
 <template>
     <PublicLayout title="Check my booking">
         <div class="mx-auto w-full max-w-lg">
-            <!-- ── Dark navy hero band ─────────────────────────────────── -->
+            <!-- ── Dark noir hero band ─────────────────────────────────── -->
             <div
-                class="overflow-hidden rounded-2xl bg-gradient-to-br from-navy-900 to-sapphire-700 px-6 py-10 text-center shadow-float sm:px-10 sm:py-12"
+                class="overflow-hidden rounded-2xl bg-gradient-to-br from-noir-900 to-graphite-700 px-6 py-10 text-center shadow-float sm:px-10 sm:py-12"
             >
-                <!-- Dark surface: the light-locked mark sits bare, no plate. -->
+                <!-- Dark surface: the white wordmark, placed bare — no plate. -->
                 <img
-                    src="/images/brand/logo-mark.png"
-                    alt="The Paddle Room"
-                    width="231"
-                    height="178"
+                    src="/images/brand/logo-mark-light.png"
+                    alt="After Hours"
+                    width="960"
+                    height="463"
                     class="mx-auto h-auto w-32"
                 />
 
-                <p class="mt-5 font-display-heading text-xs tracking-[0.2em] text-taupe-500">
+                <p class="mt-5 font-display-heading text-xs tracking-[0.2em] text-ash-500">
                     Check my booking
                 </p>
                 <h1 class="mt-2 font-display-heading text-3xl text-white sm:text-4xl">
                     Find Your Reservation
                 </h1>
-                <p class="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ivory-200">
+                <p class="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-bone-200">
                     Enter the booking code we sent you. No account, no password — the code is all
                     you need.
                 </p>
@@ -63,7 +63,7 @@ function submit() {
 
             <!-- ── Form card ────────────────────────────────────────────── -->
             <div
-                class="relative z-10 mx-4 -mt-6 rounded-2xl border border-ivory-300/70 bg-white p-6 shadow-card sm:mx-6 sm:p-8"
+                class="relative z-10 mx-4 -mt-6 rounded-2xl border border-bone-300/70 bg-white p-6 shadow-card sm:mx-6 sm:p-8"
             >
                 <form @submit.prevent="submit">
                     <FormInput
@@ -83,7 +83,7 @@ function submit() {
 
                     <button
                         type="submit"
-                        class="mt-6 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-navy-900 px-5 py-3 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-sapphire-500 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55"
+                        class="mt-6 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-graphite-500 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55"
                         :disabled="form.processing"
                     >
                         <LoaderCircle
@@ -100,16 +100,16 @@ function submit() {
 
             <div class="mt-6 space-y-3 px-4 sm:px-6">
                 <div
-                    class="flex items-start gap-3 rounded-xl border border-ivory-300/70 bg-white p-4"
+                    class="flex items-start gap-3 rounded-xl border border-bone-300/70 bg-white p-4"
                 >
                     <CircleHelp
                         :size="17"
-                        class="mt-0.5 shrink-0 text-navy-400"
+                        class="mt-0.5 shrink-0 text-noir-400"
                         aria-hidden="true"
                     />
                     <div class="min-w-0">
-                        <p class="text-sm font-medium text-navy-900">Lost your code?</p>
-                        <p class="mt-0.5 text-sm leading-relaxed text-navy-500">
+                        <p class="text-sm font-medium text-noir-900">Lost your code?</p>
+                        <p class="mt-0.5 text-sm leading-relaxed text-noir-500">
                             It is in the text message and email we sent when you booked, and in
                             the link you were given after paying.
                         </p>
@@ -117,19 +117,19 @@ function submit() {
                 </div>
 
                 <div
-                    class="flex flex-wrap items-center gap-3 rounded-xl border border-ivory-300/70 bg-white p-4"
+                    class="flex flex-wrap items-center gap-3 rounded-xl border border-bone-300/70 bg-white p-4"
                 >
                     <CalendarDays
                         :size="17"
-                        class="shrink-0 text-taupe-600"
+                        class="shrink-0 text-ash-600"
                         aria-hidden="true"
                     />
-                    <p class="min-w-0 flex-1 text-sm text-navy-600">
+                    <p class="min-w-0 flex-1 text-sm text-noir-600">
                         Not booked yet? The schedule is open now.
                     </p>
                     <Link
                         :href="route('public.courts.index')"
-                        class="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-navy-900 transition-colors hover:text-sapphire-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                        class="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-noir-900 transition-colors hover:text-graphite-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                     >
                         Browse courts
                         <ArrowRight :size="14" aria-hidden="true" />

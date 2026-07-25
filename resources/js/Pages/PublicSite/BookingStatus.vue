@@ -140,8 +140,8 @@ const HERO_TONES = {
     warn: 'bg-warn-50 ring-warn-500/25',
     danger: 'bg-danger-50 ring-danger-500/20',
     info: 'bg-info-50 ring-info-500/20',
-    brand: 'bg-gradient-to-br from-navy-900 to-sapphire-700 ring-navy-900/10',
-    ink: 'bg-navy-50 ring-navy-100',
+    brand: 'bg-gradient-to-br from-noir-900 to-graphite-700 ring-noir-900/10',
+    ink: 'bg-noir-50 ring-noir-100',
 };
 
 const HERO_ICONS = {
@@ -149,19 +149,19 @@ const HERO_ICONS = {
     warn: 'bg-white text-warn-600',
     danger: 'bg-white text-danger-600',
     info: 'bg-white text-info-600',
-    brand: 'bg-taupe-500/15 text-taupe-500',
-    ink: 'bg-white text-navy-500',
+    brand: 'bg-ash-500/15 text-ash-500',
+    ink: 'bg-white text-noir-500',
 };
 
 /** Headline/kicker/body text colour flips to a light palette on the dark
  * "completed" hero; every other tone sits on a light tint and stays dark. */
 const HERO_TEXT = {
-    success: { kicker: 'text-success-700', headline: 'text-navy-900', body: 'text-navy-600' },
-    warn: { kicker: 'text-warn-700', headline: 'text-navy-900', body: 'text-navy-600' },
-    danger: { kicker: 'text-danger-700', headline: 'text-navy-900', body: 'text-navy-600' },
-    info: { kicker: 'text-info-600', headline: 'text-navy-900', body: 'text-navy-600' },
-    brand: { kicker: 'text-taupe-500', headline: 'text-white', body: 'text-ivory-200' },
-    ink: { kicker: 'text-navy-500', headline: 'text-navy-900', body: 'text-navy-600' },
+    success: { kicker: 'text-success-700', headline: 'text-noir-900', body: 'text-noir-600' },
+    warn: { kicker: 'text-warn-700', headline: 'text-noir-900', body: 'text-noir-600' },
+    danger: { kicker: 'text-danger-700', headline: 'text-noir-900', body: 'text-noir-600' },
+    info: { kicker: 'text-info-600', headline: 'text-noir-900', body: 'text-noir-600' },
+    brand: { kicker: 'text-ash-500', headline: 'text-white', body: 'text-bone-200' },
+    ink: { kicker: 'text-noir-500', headline: 'text-noir-900', body: 'text-noir-600' },
 };
 
 const heroText = computed(() => HERO_TEXT[story.value.tone] ?? HERO_TEXT.ink);
@@ -289,16 +289,16 @@ const wizardSteps = [
     { label: 'Confirmed' },
 ];
 
-/** Primary action: navy fill, white text (~15.7:1). Taupe is never used as a
- *  white-text fill — white on Warm Taupe is ~1.9:1 and fails WCAG. */
+/** Primary action: noir fill, white text (21:1). Ash is never used as a
+ *  white-text fill — white on ash-500 is ~1.9:1 and fails WCAG. */
 const primaryCta =
-    'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-navy-900 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-sapphire-500 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900';
+    'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-graphite-500 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900';
 </script>
 
 <template>
     <PublicLayout :title="`Booking ${booking.code}`">
         <div class="mx-auto w-full max-w-3xl">
-            <div class="rounded-xl border border-ivory-300/70 bg-white px-5 py-5 shadow-card sm:px-8">
+            <div class="rounded-xl border border-bone-300/70 bg-white px-5 py-5 shadow-card sm:px-8">
                 <ProgressSteps :steps="wizardSteps" :current="booking.step" compact />
             </div>
 
@@ -353,11 +353,11 @@ const primaryCta =
                     class="mt-6 flex flex-wrap items-center gap-3 rounded-xl bg-white p-4 shadow-card"
                 >
                     <div class="min-w-0 flex-1">
-                        <p class="text-[11px] tracking-wide text-navy-500 uppercase">
+                        <p class="text-[11px] tracking-wide text-noir-500 uppercase">
                             Booking code
                         </p>
                         <p
-                            class="mt-0.5 font-mono text-xl font-semibold tracking-wider text-sapphire-500 sm:text-2xl"
+                            class="mt-0.5 font-mono text-xl font-semibold tracking-wider text-graphite-500 sm:text-2xl"
                         >
                             {{ booking.code }}
                         </p>
@@ -392,7 +392,7 @@ const primaryCta =
                     v-if="showCountdown"
                     :class="[
                         'mt-4 flex items-center gap-2 text-sm font-medium',
-                        story.tone === 'brand' ? 'text-ivory-200' : 'text-navy-700',
+                        story.tone === 'brand' ? 'text-bone-200' : 'text-noir-700',
                     ]"
                 >
                     <Timer :size="15" class="opacity-70" aria-hidden="true" />
@@ -417,13 +417,13 @@ const primaryCta =
             <!-- ── Primary calls to action ────────────────────────────── -->
             <div
                 v-if="booking.can_pay"
-                class="mt-5 flex flex-wrap items-center gap-3 rounded-xl border-2 border-taupe-400 bg-taupe-50 p-5"
+                class="mt-5 flex flex-wrap items-center gap-3 rounded-xl border-2 border-ash-400 bg-ash-50 p-5"
             >
                 <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-navy-900">
+                    <p class="text-sm font-semibold text-noir-900">
                         {{ amount }} still to pay
                     </p>
-                    <p class="mt-0.5 text-sm text-navy-600">
+                    <p class="mt-0.5 text-sm text-noir-600">
                         Finish your payment to lock this slot in.
                     </p>
                 </div>
@@ -435,11 +435,11 @@ const primaryCta =
 
             <div
                 v-else-if="!isOpen && !isSettled"
-                class="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-ivory-300/70 bg-white p-5 shadow-card"
+                class="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-bone-300/70 bg-white p-5 shadow-card"
             >
                 <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-navy-900">Want to book again?</p>
-                    <p class="mt-0.5 text-sm text-navy-600">
+                    <p class="text-sm font-semibold text-noir-900">Want to book again?</p>
+                    <p class="mt-0.5 text-sm text-noir-600">
                         The schedule is open — pick a new time in a couple of taps.
                     </p>
                 </div>
@@ -459,56 +459,53 @@ const primaryCta =
             <!-- ── Details ────────────────────────────────────────────── -->
             <section
                 :class="[
-                    'mt-5 overflow-hidden rounded-xl border border-ivory-300/70 bg-white shadow-card',
-                    isSettled ? 'border-t-4 border-t-taupe-500' : '',
+                    'mt-5 overflow-hidden rounded-xl border border-bone-300/70 bg-white shadow-card',
+                    isSettled ? 'border-t-4 border-t-ash-500' : '',
                 ]"
             >
                 <header
-                    class="flex items-center gap-3 border-b border-ivory-300/70 px-5 py-4 sm:px-6"
+                    class="flex items-center gap-3 border-b border-bone-300/70 px-5 py-4 sm:px-6"
                 >
-                    <!-- Light surface: the light-locked mark needs a navy plate. -->
-                    <span
-                        class="inline-flex shrink-0 items-center justify-center rounded-lg bg-navy-900 px-2.5 py-2"
-                    >
-                        <img
-                            src="/images/brand/logo-mark.png"
-                            alt="The Paddle Room"
-                            width="231"
-                            height="178"
-                            class="h-auto w-14"
-                        />
-                    </span>
-                    <h2 class="min-w-0 font-display-heading text-sm text-navy-900">
+                    <!-- Light surface: the crimson mark is drawn for light
+                         backgrounds, so it sits bare — no plate behind it. -->
+                    <img
+                        src="/images/brand/logo-mark.png"
+                        alt="After Hours"
+                        width="960"
+                        height="463"
+                        class="h-auto w-14 shrink-0"
+                    />
+                    <h2 class="min-w-0 font-display-heading text-sm text-noir-900">
                         Booking details
                     </h2>
                 </header>
 
-                <dl class="grid grid-cols-1 divide-y divide-ivory-300/70 sm:grid-cols-2 sm:divide-y-0">
-                    <div class="px-5 py-4 sm:border-b sm:border-ivory-300/70">
-                        <dt class="flex items-center gap-1.5 text-xs text-navy-500">
+                <dl class="grid grid-cols-1 divide-y divide-bone-300/70 sm:grid-cols-2 sm:divide-y-0">
+                    <div class="px-5 py-4 sm:border-b sm:border-bone-300/70">
+                        <dt class="flex items-center gap-1.5 text-xs text-noir-500">
                             <MapPin :size="13" aria-hidden="true" />
                             {{ booking.is_multi_court ? 'Courts' : 'Court' }}
                         </dt>
                         <!-- A booking may span more than one court: list every
                              one so the receipt names each court being played,
                              not just the primary. Single-court is unchanged. -->
-                        <dd class="mt-1 text-sm font-medium text-navy-900">
+                        <dd class="mt-1 text-sm font-medium text-noir-900">
                             {{ booking.is_multi_court ? booking.court_names.join(', ') : booking.court_name }}
                         </dd>
                     </div>
 
-                    <div class="px-5 py-4 sm:border-b sm:border-l sm:border-ivory-300/70">
-                        <dt class="flex items-center gap-1.5 text-xs text-navy-500">
+                    <div class="px-5 py-4 sm:border-b sm:border-l sm:border-bone-300/70">
+                        <dt class="flex items-center gap-1.5 text-xs text-noir-500">
                             <CalendarDays :size="13" aria-hidden="true" />
                             Date
                         </dt>
-                        <dd class="mt-1 text-sm font-medium text-navy-900">
+                        <dd class="mt-1 text-sm font-medium text-noir-900">
                             {{ booking.date ?? '—' }}
                         </dd>
                     </div>
 
-                    <div class="px-5 py-4 sm:border-b sm:border-ivory-300/70">
-                        <dt class="flex items-center gap-1.5 text-xs text-navy-500">
+                    <div class="px-5 py-4 sm:border-b sm:border-bone-300/70">
+                        <dt class="flex items-center gap-1.5 text-xs text-noir-500">
                             <Clock :size="13" aria-hidden="true" />
                             Time
                         </dt>
@@ -522,35 +519,35 @@ const primaryCta =
                             <p
                                 v-for="(slot, index) in booking.slots"
                                 :key="`${index}-${slot.time_range}`"
-                                class="text-sm font-medium text-navy-900"
+                                class="text-sm font-medium text-noir-900"
                             >
                                 {{ booking.is_multi_court ? `${slot.court_name} · ${slot.time_range}` : slot.time_range }}
                             </p>
                         </dd>
-                        <dd v-else class="mt-1 text-sm font-medium text-navy-900">
+                        <dd v-else class="mt-1 text-sm font-medium text-noir-900">
                             {{ booking.time_range ?? '—' }}
-                            <span v-if="booking.duration_minutes" class="font-normal text-navy-500">
+                            <span v-if="booking.duration_minutes" class="font-normal text-noir-500">
                                 · {{ booking.duration_minutes }} min
                             </span>
                         </dd>
                     </div>
 
-                    <div class="px-5 py-4 sm:border-b sm:border-l sm:border-ivory-300/70">
-                        <dt class="flex items-center gap-1.5 text-xs text-navy-500">
+                    <div class="px-5 py-4 sm:border-b sm:border-l sm:border-bone-300/70">
+                        <dt class="flex items-center gap-1.5 text-xs text-noir-500">
                             <Wallet :size="13" aria-hidden="true" />
                             Amount
                         </dt>
-                        <dd class="mt-1 text-sm font-semibold tabular-nums text-navy-900">
+                        <dd class="mt-1 text-sm font-semibold tabular-nums text-noir-900">
                             {{ amount }}
                         </dd>
                     </div>
 
                     <div class="px-5 py-4">
-                        <dt class="text-xs text-navy-500">Booked for</dt>
-                        <dd class="mt-1 text-sm font-medium text-navy-900">
+                        <dt class="text-xs text-noir-500">Booked for</dt>
+                        <dd class="mt-1 text-sm font-medium text-noir-900">
                             {{ booking.customer_name }}
                         </dd>
-                        <dd class="mt-0.5 flex items-center gap-1.5 text-xs text-navy-500">
+                        <dd class="mt-0.5 flex items-center gap-1.5 text-xs text-noir-500">
                             <Phone :size="12" aria-hidden="true" />
                             {{ booking.customer_phone }}
                         </dd>
@@ -558,27 +555,27 @@ const primaryCta =
 
                     <div
                         v-if="booking.payment_reference"
-                        class="px-5 py-4 sm:border-l sm:border-ivory-300/70"
+                        class="px-5 py-4 sm:border-l sm:border-bone-300/70"
                     >
-                        <dt class="text-xs text-navy-500">{{ referenceLabel }}</dt>
-                        <dd class="mt-1 font-mono text-sm font-medium tracking-wide text-navy-900">
+                        <dt class="text-xs text-noir-500">{{ referenceLabel }}</dt>
+                        <dd class="mt-1 font-mono text-sm font-medium tracking-wide text-noir-900">
                             {{ booking.payment_reference }}
                         </dd>
                     </div>
                 </dl>
 
-                <div v-if="booking.notes" class="border-t border-ivory-300/70 px-5 py-4 sm:px-6">
-                    <p class="text-xs text-navy-500">Your note</p>
-                    <p class="mt-1 text-sm leading-relaxed whitespace-pre-line text-navy-700">
+                <div v-if="booking.notes" class="border-t border-bone-300/70 px-5 py-4 sm:px-6">
+                    <p class="text-xs text-noir-500">Your note</p>
+                    <p class="mt-1 text-sm leading-relaxed whitespace-pre-line text-noir-700">
                         {{ booking.notes }}
                     </p>
                 </div>
 
                 <div
                     v-if="booking.can_cancel"
-                    class="flex flex-wrap items-center justify-between gap-3 border-t border-ivory-300/70 bg-ivory-100/60 px-5 py-4 sm:px-6"
+                    class="flex flex-wrap items-center justify-between gap-3 border-t border-bone-300/70 bg-bone-100/60 px-5 py-4 sm:px-6"
                 >
-                    <p class="min-w-0 text-xs leading-relaxed text-navy-500">
+                    <p class="min-w-0 text-xs leading-relaxed text-noir-500">
                         Cannot make it? Cancel now so someone else can take the court.
                     </p>
                     <Button variant="ghost" size="sm" :loading="cancelling" @click="cancelBooking">
@@ -590,9 +587,9 @@ const primaryCta =
             <!-- ── Support ────────────────────────────────────────────── -->
             <div
                 v-if="payment && (payment.support_phone || payment.support_email)"
-                class="mt-5 flex flex-wrap items-center gap-3 rounded-xl bg-navy-50 p-4 ring-1 ring-inset ring-navy-100"
+                class="mt-5 flex flex-wrap items-center gap-3 rounded-xl bg-noir-50 p-4 ring-1 ring-inset ring-noir-100"
             >
-                <p class="min-w-0 flex-1 text-sm text-navy-600">
+                <p class="min-w-0 flex-1 text-sm text-noir-600">
                     Something not right with this booking? Talk to us and quote your code.
                 </p>
                 <Button
@@ -620,7 +617,7 @@ const primaryCta =
             <div class="mt-5 flex flex-wrap items-center justify-between gap-3 px-1">
                 <Link
                     :href="route('public.booking.lookup')"
-                    class="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-navy-500 transition-colors hover:text-navy-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                    class="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-noir-500 transition-colors hover:text-noir-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                 >
                     <Search :size="15" aria-hidden="true" />
                     Look up a different booking
@@ -628,7 +625,7 @@ const primaryCta =
 
                 <Link
                     :href="route('public.courts.index')"
-                    class="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-navy-500 transition-colors hover:text-navy-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy-900"
+                    class="inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-noir-500 transition-colors hover:text-noir-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900"
                 >
                     Browse all courts
                     <ArrowRight :size="15" aria-hidden="true" />

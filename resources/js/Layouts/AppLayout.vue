@@ -149,7 +149,7 @@ const isActive = (item) => activePattern.value === item.pattern;
 /* Sidebar state                                                       */
 /* ------------------------------------------------------------------ */
 
-const STORAGE_KEY = 'phea.sidebar.collapsed';
+const STORAGE_KEY = 'afterhours.sidebar.collapsed';
 
 const collapsed = ref(false);
 const mobileOpen = ref(false);
@@ -302,18 +302,14 @@ async function logout() {
                     :href="navigation[0]?.href ?? '/'"
                     class="flex min-w-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                 >
-                    <!-- Light sidebar: the light-locked mark needs a navy plate. -->
-                    <span
-                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-900 shadow-card"
-                    >
-                        <img
-                            src="/images/brand/logo-mark.png"
-                            alt="The Paddle Room"
-                            width="231"
-                            height="178"
-                            class="h-5 w-auto"
-                        />
-                    </span>
+                    <!-- Light sidebar: the crimson mark is drawn for light surfaces, so it sits bare. -->
+                    <img
+                        src="/images/brand/logo-mark.png"
+                        alt="After Hours"
+                        width="960"
+                        height="463"
+                        class="h-5 w-auto shrink-0"
+                    />
                     <span
                         :class="[
                             'min-w-0 leading-tight transition-opacity duration-200',
@@ -321,7 +317,7 @@ async function logout() {
                         ]"
                     >
                         <span class="block truncate text-sm font-semibold text-ink-900">
-                            {{ page.props.appName ?? 'The Paddle Room' }}
+                            {{ page.props.appName ?? 'After Hours' }}
                         </span>
                         <span class="block truncate text-[11px] text-ink-500">
                             Court bookings
@@ -533,7 +529,7 @@ async function logout() {
             </main>
 
             <footer class="shrink-0 px-4 pb-6 text-center text-xs text-ink-400 sm:px-6">
-                {{ page.props.appName ?? 'The Paddle Room' }} · Pickleball court bookings
+                {{ page.props.appName ?? 'After Hours' }} · Pickleball court bookings
             </footer>
         </div>
     </div>

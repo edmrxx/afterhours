@@ -25,7 +25,7 @@ class BookingConfirmed extends BookingNotification
 
         return sprintf(
             '%s: Booking %s is CONFIRMED. %s on %s, %s. Paid %s. Show this code at the desk. See you!',
-            (string) config('app.name', 'PHEA'),
+            (string) config('app.name', 'After Hours'),
             (string) $summary['code'],
             (string) $summary['court_name'],
             (string) $summary['date_short'],

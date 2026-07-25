@@ -31,7 +31,7 @@ use Inertia\Response;
 /**
  * The scheduling screen: a court, a date window, and everything on it.
  *
- * Slots are fully admin defined — PHEA has no fixed system-wide interval — so
+ * Slots are fully admin defined — After Hours has no fixed system-wide interval — so
  * this controller has to serve both the surgical case (add one 90-minute slot
  * next Tuesday) and the bulk case (lay down three months of weekday hours in
  * one action). The bulk work lives in SlotGeneratorService; what stays here is

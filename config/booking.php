@@ -23,11 +23,11 @@ return [
     | Public booking code
     |--------------------------------------------------------------------------
     |
-    | Prefix for the customer-facing identifier, e.g. PHEA-K7M4XQ9B.
+    | Prefix for the customer-facing identifier, e.g. AH-K7M4XQ9B.
     |
     */
 
-    'code_prefix' => env('BOOKING_CODE_PREFIX', 'PHEA'),
+    'code_prefix' => env('BOOKING_CODE_PREFIX', 'AH'),
 
     /*
     |--------------------------------------------------------------------------
@@ -67,7 +67,7 @@ return [
     |
     */
 
-    'admin_email' => env('BOOKING_ADMIN_EMAIL', 'admin@phea.test'),
+    'admin_email' => env('BOOKING_ADMIN_EMAIL', 'admin@afterhours.test'),
 
     /*
     |--------------------------------------------------------------------------

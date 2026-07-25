@@ -40,25 +40,25 @@ class DemoDataSeeder extends Seeder
     private const COURTS = [
         [
             'name' => 'Center Court',
-            'code' => 'PHEA-C1',
+            'code' => 'AH-C1',
             'sort' => 1,
             'description' => 'Championship indoor court with tournament-grade acrylic surface, LED lighting and covered spectator seating.',
         ],
         [
             'name' => 'Rizal Court',
-            'code' => 'PHEA-C2',
+            'code' => 'AH-C2',
             'sort' => 2,
             'description' => 'Indoor court with cushioned flooring and air-conditioned rest area. Ideal for league night doubles.',
         ],
         [
             'name' => 'Bonifacio Court',
-            'code' => 'PHEA-C3',
+            'code' => 'AH-C3',
             'sort' => 3,
             'description' => 'Semi-covered court with natural ventilation. The regulars\' favourite for early morning games.',
         ],
         [
             'name' => 'Sampaguita Court',
-            'code' => 'PHEA-C4',
+            'code' => 'AH-C4',
             'sort' => 4,
             'description' => 'Outdoor court under shade netting. Best value for casual play and beginner clinics.',
         ],
@@ -173,7 +173,7 @@ class DemoDataSeeder extends Seeder
         if (! $staff->exists) {
             $staff->fill([
                 'name' => 'Grace Villanueva',
-                'email' => 'staff@phea.test',
+                'email' => 'staff@afterhours.test',
                 'phone' => '09171234567',
                 'password' => Hash::make('staff123'),
                 'is_active' => true,

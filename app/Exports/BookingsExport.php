@@ -66,7 +66,7 @@ final class BookingsExport
     public function filename(array $filters): string
     {
         return sprintf(
-            'phea-bookings-report_%s_to_%s.csv',
+            'afterhours-bookings-report_%s_to_%s.csv',
             (string) $filters['date_from'],
             (string) $filters['date_to'],
         );

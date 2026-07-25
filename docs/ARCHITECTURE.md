@@ -1,4 +1,4 @@
-# PHEA — Architecture & Build Contract
+# After Hours — Architecture & Build Contract
 
 This is the single source of truth every module binds to. Routes, permission
 names, database columns, booking states and UI component APIs are **fixed**
@@ -91,7 +91,7 @@ off the market). Release returns `held` → `available` and nulls `held_booking_
 
 ### `bookings`
 
-`code` (unique, public identifier, format `PHEA-XXXXXXXX`), `court_id` FK,
+`code` (unique, public identifier, format `AH-XXXXXXXX`), `court_id` FK,
 `court_slot_id` FK, `customer_name`, `customer_phone`, `customer_email`
 (nullable), `notes`, `amount` decimal(10,2), `status` enum, `payment_reference`,
 `payment_method` (nullable), `payment_proof_path`, `payment_submitted_at`,
@@ -265,7 +265,7 @@ Inertia partial reloads.
 ### SweetAlert2
 
 Only through the `useSwal()` composable — no direct imports in pages. It must
-apply the `phea-swal` / `phea-swal-toast` custom classes already styled in
+apply the `ah-swal` / `ah-swal-toast` custom classes already styled in
 `app.css`. Provides: `toastSuccess`, `toastError`, `confirmDelete`,
 `confirmAction`, `showValidationErrors`, `confirmLogout`, `sessionExpired`.
 Flash props are consumed centrally in `AppLayout` — pages never re-handle them.

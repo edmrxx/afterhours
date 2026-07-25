@@ -35,7 +35,7 @@ const canUpdate = computed(() => can('settings.update'));
 const initial = () => ({
     booking_hold_minutes: Number(props.settings.booking_hold_minutes ?? 30),
     booking_verification_hold_minutes: Number(props.settings.booking_verification_hold_minutes ?? 720),
-    booking_code_prefix: String(props.settings.booking_code_prefix ?? 'PHEA'),
+    booking_code_prefix: String(props.settings.booking_code_prefix ?? 'AH'),
     owner_notification_email: String(props.settings.owner_notification_email ?? ''),
     pricing_non_peak_rate: Number(props.settings.pricing_non_peak_rate ?? 450),
     pricing_peak_rate: Number(props.settings.pricing_peak_rate ?? 500),
@@ -92,7 +92,7 @@ const verificationDisplay = computed(() => formatDuration(form.booking_verificat
 
 /** Uppercased live, matching how the server stores it — a customer never
  *  sees a lowercase code regardless of how the admin typed the prefix. */
-const codePrefixDisplay = computed(() => String(form.booking_code_prefix ?? '').toUpperCase() || 'PHEA');
+const codePrefixDisplay = computed(() => String(form.booking_code_prefix ?? '').toUpperCase() || 'AH');
 const sampleCode = computed(() => `${codePrefixDisplay.value}-K7M4XQ9B`);
 
 /* ------------------------------------------------------------------ */
@@ -201,12 +201,12 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
 
                     <Card
                         title="Booking code prefix"
-                        subtitle="The letters at the front of every booking code, e.g. PHEA-K7M4XQ9B."
+                        subtitle="The letters at the front of every booking code, e.g. AH-K7M4XQ9B."
                     >
                         <FormInput
                             v-model="form.booking_code_prefix"
                             label="Prefix"
-                            placeholder="PHEA"
+                            placeholder="AH"
                             :maxlength="10"
                             :disabled="!canUpdate"
                             :icon="Hash"
@@ -242,7 +242,7 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
                             <div class="rounded-xl border border-ink-200 p-4">
                                 <div class="mb-4 flex items-center gap-2">
                                     <span
-                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-navy-100 text-navy-700"
+                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-noir-100 text-noir-700"
                                         aria-hidden="true"
                                     >
                                         <Moon :size="15" />
@@ -293,7 +293,7 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
                             <div class="rounded-xl border border-ink-200 p-4">
                                 <div class="mb-4 flex items-center gap-2">
                                     <span
-                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sapphire-50 text-sapphire-600"
+                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-graphite-50 text-graphite-600"
                                         aria-hidden="true"
                                     >
                                         <Sun :size="15" />
@@ -465,7 +465,7 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
                             <div class="flex items-center justify-between gap-3">
                                 <span class="inline-flex items-center gap-2 text-sm text-ink-700">
                                     <span
-                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sapphire-50 text-sapphire-600"
+                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-graphite-50 text-graphite-600"
                                         aria-hidden="true"
                                     >
                                         <Sun :size="15" />
@@ -479,7 +479,7 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
                             <div class="mt-3 flex items-center justify-between gap-3">
                                 <span class="inline-flex items-center gap-2 text-sm text-ink-700">
                                     <span
-                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-navy-100 text-navy-700"
+                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-noir-100 text-noir-700"
                                         aria-hidden="true"
                                     >
                                         <Moon :size="15" />

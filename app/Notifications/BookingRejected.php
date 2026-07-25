@@ -27,7 +27,7 @@ class BookingRejected extends BookingNotification
 
         return sprintf(
             '%s: We could not verify the payment for booking %s (%s on %s, %s), so the slot was released.%s Reply or call us if this looks wrong.',
-            (string) config('app.name', 'PHEA'),
+            (string) config('app.name', 'After Hours'),
             (string) $summary['code'],
             (string) $summary['court_name'],
             (string) $summary['date_short'],

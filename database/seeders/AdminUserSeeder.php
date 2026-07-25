@@ -24,7 +24,7 @@ class AdminUserSeeder extends Seeder
         if ($created) {
             $user->fill([
                 'name' => 'System Administrator',
-                'email' => 'admin@phea.test',
+                'email' => 'admin@afterhours.test',
                 'password' => Hash::make(self::DEFAULT_PASSWORD),
                 'is_active' => true,
                 // The `password.changed` middleware traps them until they rotate it.

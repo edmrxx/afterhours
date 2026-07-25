@@ -38,13 +38,14 @@ class PaymentSettingsSeeder extends Seeder
         ],
 
         Setting::GROUP_COMPANY => [
-            'company_name' => ['string', 'The Paddle Room'],
-            'company_tagline' => ['string', 'Pickleball, properly scheduled.'],
-            // Deliberately blank: a real contact address belongs to the client
-            // and is set in Admin > Settings > Company, not invented here.
+            'company_name' => ['string', 'After Hours'],
+            'company_tagline' => ['string', 'Book Your Court. Bring Your Game.'],
+            // Address is the client's own and was supplied with the brand; email
+            // and phone still belong to them and are set in Admin > Settings >
+            // Company rather than invented here.
             'company_email' => ['string', ''],
             'company_phone' => ['string', ''],
-            'company_address' => ['text', ''],
+            'company_address' => ['text', 'Banilad, Cebu City'],
             'company_logo_path' => ['image', null],
             'company_facebook' => ['string', ''],
 
@@ -64,7 +65,7 @@ class PaymentSettingsSeeder extends Seeder
             // through the Tailwind theme so the palette stays single-sourced.
             'primary_palette' => ['string', 'brand'],
             'sidebar_style' => ['string', 'light'],
-            'hero_headline' => ['string', 'Your court. Your hour.'],
+            'hero_headline' => ['string', 'Play beyond the 9-to-5.'],
             'hero_subheadline' => ['text', 'Book a court in a few taps. Every time slot is checked against live availability for the exact court and date you choose.'],
             'hero_image_path' => ['image', null],
         ],
@@ -83,7 +84,7 @@ class PaymentSettingsSeeder extends Seeder
             'booking_verification_hold_minutes' => ['integer', '720'],
             // Overrides config('booking.code_prefix') / BOOKING_CODE_PREFIX without
             // touching .env — see Booking::codePrefix().
-            'booking_code_prefix' => ['string', 'PHEA'],
+            'booking_code_prefix' => ['string', 'AH'],
 
             // Global court pricing — a rate per tier plus the peak clock window
             // (non-peak is every hour outside it). The peak window deliberately

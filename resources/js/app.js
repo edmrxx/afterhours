@@ -6,7 +6,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from 'ziggy-js';
 
-const appName = import.meta.env.VITE_APP_NAME || 'The Paddle Room';
+const appName = import.meta.env.VITE_APP_NAME || 'After Hours';
 
 /*
 | ApexCharts is deliberately NOT registered globally. It is a ~500kB dependency
@@ -32,7 +32,7 @@ createInertiaApp({
     },
 
     progress: {
-        color: '#4f46e5',
+        color: '#781714', /* brand-600 — keep in step with the crimson in app.css */
         showSpinner: false,
     },
 });

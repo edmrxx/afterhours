@@ -27,7 +27,7 @@ class UpdateThemeSettingsRequest extends FormRequest
     public const PALETTES = [
         'brand' => [
             'label' => 'Violet',
-            'description' => 'The PHEA default. Full 50–900 ramp.',
+            'description' => 'The After Hours default. Full 50–900 ramp.',
         ],
         'info' => [
             'label' => 'Ocean',

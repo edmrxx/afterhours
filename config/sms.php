@@ -30,6 +30,6 @@ return [
 
     'api_key' => env('SMS_API_KEY'),
 
-    'sender_name' => env('SMS_SENDER_NAME', 'PHEA'),
+    'sender_name' => env('SMS_SENDER_NAME', 'AfterHours'),
 
 ];

@@ -125,7 +125,7 @@ class SystemSettingsController extends Controller
         return [
             'booking_hold_minutes' => (int) ($group['booking_hold_minutes'] ?? config('booking.hold_minutes', 30)),
             'booking_verification_hold_minutes' => (int) ($group['booking_verification_hold_minutes'] ?? config('booking.verification_hold_minutes', 720)),
-            'booking_code_prefix' => mb_strtoupper((string) (($group['booking_code_prefix'] ?? null) ?: config('booking.code_prefix', 'PHEA'))),
+            'booking_code_prefix' => mb_strtoupper((string) (($group['booking_code_prefix'] ?? null) ?: config('booking.code_prefix', 'AH'))),
             // No config fallback: unlike the operations mailbox in config/booking.php,
             // this is a deliberately opt-in personal address that stays blank until
             // the owner types one in.
