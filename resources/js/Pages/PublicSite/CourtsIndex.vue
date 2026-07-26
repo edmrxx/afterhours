@@ -1004,7 +1004,9 @@ function submitLookup() {
         </section>
 
         <!-- ── Already booked? ────────────────────────────────────────── -->
-        <section id="lookup" class="bg-noir-900">
+        <!-- Same subtle noir-corner-into-crimson wash as the hero, so the two
+             dark bands on this page read as one consistent theme. -->
+        <section id="lookup" class="bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600">
             <div class="mx-auto w-full max-w-2xl px-4 py-14 text-center sm:px-6 sm:py-20">
                 <p class="text-[11px] font-semibold tracking-[0.25em] text-ash-400 uppercase">
                     Already booked?
@@ -1037,13 +1039,12 @@ function submitLookup() {
                         />
                     </div>
 
-                    <!-- This band is solid noir, so the primary action inverts to a
-                         white fill instead of black-on-black — same "no red" rule,
-                         adapted so the button stays visible on a black surface. -->
+                    <!-- The band is crimson now (not flat noir), so a black button
+                         reads fine here again — back to the standard rule. -->
                     <button
                         type="submit"
                         :disabled="lookupForm.processing"
-                        class="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-noir-900 shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-bone-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-60"
+                        class="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-noir-900 px-5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-noir-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-60"
                     >
                         <LoaderCircle v-if="lookupForm.processing" :size="16" class="animate-spin" aria-hidden="true" />
                         <span>Find booking</span>

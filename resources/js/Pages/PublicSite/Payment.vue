@@ -124,11 +124,12 @@ const urgent = computed(() => !expired.value && remainingMs.value <= 5 * 60 * 10
 
 const holdTone = computed(() => (expired.value ? 'expired' : urgent.value ? 'urgent' : 'calm'));
 
-// The calm state is brand chrome (noir band, ash accent); urgent/expired
-// deliberately stay on the warn/danger semantics so the customer can read the
-// timer's seriousness at a glance rather than decoding the brand palette.
+// The calm state is brand chrome (the same noir-corner-into-crimson wash used
+// for the hero/footer/lookup band, ash accent); urgent/expired deliberately
+// stay on the warn/danger semantics so the customer can read the timer's
+// seriousness at a glance rather than decoding the brand palette.
 const HOLD_WRAPPER = {
-    calm: 'bg-noir-900 ring-1 ring-inset ring-graphite-700',
+    calm: 'bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600 ring-1 ring-inset ring-graphite-700',
     urgent: 'bg-warn-50 ring-1 ring-inset ring-warn-500/25',
     expired: 'bg-danger-50 ring-1 ring-inset ring-danger-500/20',
 };

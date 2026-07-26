@@ -6,12 +6,14 @@ import { ArrowLeft } from '@lucide/vue';
 import { useSwal } from '@/Composables/useSwal';
 
 /*
-| AuthLayout — a centred single-card shell on a near-black brand backdrop.
+| AuthLayout — a centred single-card shell on a dark brand backdrop.
 | Used by login and the forced password change.
 |
-| The backdrop is noir-900 (#000000). The default wordmark is crimson, drawn for
-| light surfaces, so a dark field like this one takes the light variant of the
-| artwork (logo-mark-light.png) — placed bare, with no plate behind it.
+| The backdrop carries the same subtle noir-corner-into-crimson wash as the
+| public hero/footer/lookup band, so this dark surface reads as part of the
+| same system rather than a flat black. The default wordmark is crimson,
+| drawn for light surfaces, so a dark field like this one takes the light
+| variant of the artwork (logo-mark-light.png) — placed bare, no plate.
 |
 |   <AuthLayout title="Sign in" heading="Welcome back"
 |               subheading="Sign in to manage courts and bookings">
@@ -51,8 +53,8 @@ watch(
 <template>
     <Head :title="title ?? undefined" />
 
-    <div class="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-noir-900 px-4 py-10 sm:px-6">
-        <!-- Noir backdrop: graphite glow above, a soft ash wash below. -->
+    <div class="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600 px-4 py-10 sm:px-6">
+        <!-- Noir->crimson backdrop: graphite glow above, a soft ash wash below. -->
         <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
             <div
                 class="absolute -top-40 left-1/2 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-graphite-500/40 blur-3xl"
