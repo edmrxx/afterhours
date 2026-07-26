@@ -291,7 +291,7 @@ const CTA_BASE =
     'inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55';
 
 /** Primary action: noir fill, white text (21:1); the graphite hover holds 9.0:1. */
-const primaryCta = `${CTA_BASE} bg-brand-600 text-white hover:bg-brand-500`;
+const primaryCta = `${CTA_BASE} bg-noir-900 text-white hover:bg-noir-800`;
 
 /** Secondary action: ash fill with NOIR text — white on ash-500 is ~1.9:1 and
  *  fails WCAG, so the ash surface always carries noir lettering. */

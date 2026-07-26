@@ -442,7 +442,7 @@ function submitLookup() {
 <template>
     <PublicLayout :title="court ? `Book ${court.name}` : 'Book a pickleball court'" :contained="false">
         <!-- ── Hero ───────────────────────────────────────────────────── -->
-        <section class="relative overflow-hidden bg-noir-900">
+        <section class="relative overflow-hidden bg-brand-600">
             <img
                 v-if="court?.photo_url"
                 :src="court.photo_url"
@@ -452,14 +452,12 @@ function submitLookup() {
 
             <!--
               No court photo is the common case, so the fallback has to stand on
-              its own: a noir→brand wash (black bleeding into the client's
-              crimson at the opposite corner), two soft light sources, and an
-              abstract court diagram ruled in the corner.
+              its own: solid brand crimson (no gradient — client asked for a
+              flat red field, not a black-to-red blend), two soft light
+              sources, and an abstract court diagram ruled in the corner.
             -->
             <div v-else class="pointer-events-none absolute inset-0" aria-hidden="true">
-                <div
-                    class="absolute inset-0 bg-gradient-to-br from-noir-900 via-brand-900 to-brand-600"
-                />
+                <div class="absolute inset-0 bg-brand-600" />
                 <div
                     class="absolute -top-40 -left-32 h-[34rem] w-[34rem] rounded-full bg-graphite-500/30 blur-3xl"
                 />
@@ -479,11 +477,12 @@ function submitLookup() {
 
             <!--
               Legibility scrim for the text column: darkest right behind the
-              copy/buttons, easing off toward the top so the black->crimson
-              wash underneath still reads instead of flattening to black.
+              copy/buttons, easing off toward the top. Tinted brand-900 (a
+              near-black RED) rather than noir, so any darkening it adds stays
+              inside the red field instead of reintroducing black.
             -->
             <div
-                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-noir-900/65 via-noir-900/35 to-transparent"
+                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-brand-900/60 via-brand-900/25 to-transparent"
                 aria-hidden="true"
             />
 
@@ -522,12 +521,12 @@ function submitLookup() {
                 </p>
 
                 <div class="mt-8 flex flex-wrap items-center gap-3">
-                    <!-- Crimson fill, white text (10.9:1). The hero band is noir, so the
-                         brand colour is the only fill on it with enough presence to read
-                         as the primary action — an ash pill washes out against black. -->
+                    <!-- Noir fill, white text. The hero band is solid crimson, so a black
+                         pill is what reads as the primary action here — the client's rule
+                         is buttons are black, brand red is reserved for fields/surfaces. -->
                     <a
                         href="#book"
-                        class="inline-flex h-12 items-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+                        class="inline-flex h-12 items-center gap-2 rounded-xl bg-noir-900 px-5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-noir-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40"
                     >
                         Reserve now
                         <ArrowRight :size="16" aria-hidden="true" />
@@ -860,7 +859,7 @@ function submitLookup() {
                                         </span>
                                         <span class="inline-flex items-center gap-1.5">
                                             <span
-                                                class="h-3 w-3 rounded-sm border border-brand-600 bg-brand-600 ring-1 ring-brand-500/25"
+                                                class="h-3 w-3 rounded-sm border border-noir-900 bg-noir-900 ring-1 ring-noir-900/25"
                                                 aria-hidden="true"
                                             />
                                             Selected
@@ -983,7 +982,7 @@ function submitLookup() {
                                 'mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold',
                                 'transition-colors duration-200 ease-[var(--ease-out-soft)]',
                                 chosenSlots.length > 0
-                                    ? 'cursor-pointer bg-brand-600 text-white shadow-card hover:bg-brand-500'
+                                    ? 'cursor-pointer bg-noir-900 text-white shadow-card hover:bg-noir-800'
                                     : 'cursor-not-allowed bg-bone-200 text-noir-400',
                             ]"
                             @click="openDetails"
@@ -1035,10 +1034,13 @@ function submitLookup() {
                         />
                     </div>
 
+                    <!-- This band is solid noir, so the primary action inverts to a
+                         white fill instead of black-on-black — same "no red" rule,
+                         adapted so the button stays visible on a black surface. -->
                     <button
                         type="submit"
                         :disabled="lookupForm.processing"
-                        class="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 disabled:pointer-events-none disabled:opacity-60"
+                        class="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-noir-900 shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-bone-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-60"
                     >
                         <LoaderCircle v-if="lookupForm.processing" :size="16" class="animate-spin" aria-hidden="true" />
                         <span>Find booking</span>
@@ -1156,7 +1158,7 @@ function submitLookup() {
                     type="submit"
                     form="reserve-form"
                     :disabled="form.processing"
-                    class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-graphite-500 disabled:pointer-events-none disabled:opacity-60"
+                    class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-noir-900 px-5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-noir-800 disabled:pointer-events-none disabled:opacity-60"
                 >
                     <LoaderCircle v-if="form.processing" :size="16" class="animate-spin" aria-hidden="true" />
                     Confirm reservation

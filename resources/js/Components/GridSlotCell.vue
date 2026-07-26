@@ -6,15 +6,18 @@
 | the app's existing slot-status colour convention (Composables/useStatus.js):
 |
 |   available    -> graphite tone, clickable, shows the price
-|   selected     -> the customer's current pick — solid brand-600 crimson,
-|                   white text (10.9:1), the grid's only saturated fill
+|   selected     -> the customer's current pick — solid noir-900 black,
+|                   white text (21:1), the grid's only solid-dark fill
 |   pending      -> warn tone, "Held" by someone mid-checkout, not clickable
 |   booked       -> pale brand wash, already taken, not clickable
 |   unavailable  -> muted ink tone, nothing was ever scheduled here, not clickable
 |
-| Every neutral ramp (graphite/ash/ink) lands on a near-white grey at these
-| tints, so crimson is what keeps "selected" unmistakable next to its
-| neighbours — booked stays a pale brand-50 wash and never competes with it.
+| Buttons are black system-wide, red is reserved for fields/surfaces — so
+| "selected" (this cell IS the thing you're about to book, same intent as a
+| primary button) is noir, not brand. Every neutral ramp (graphite/ash/ink)
+| lands on a near-white grey at these tints, so solid black still reads as
+| unmistakable next to its neighbours — booked stays a pale brand-50 wash and
+| never competes with it.
 */
 
 defineProps({
@@ -53,7 +56,7 @@ const TONE = {
             'transition-[background-color,border-color,box-shadow,transform] duration-150 ease-[var(--ease-out-soft)]',
             'cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900',
             selected
-                ? 'border-brand-600 bg-brand-600 text-white shadow-card ring-2 ring-brand-500/25'
+                ? 'border-noir-900 bg-noir-900 text-white shadow-card ring-2 ring-noir-900/25'
                 : 'border-graphite-500/30 bg-graphite-50 text-graphite-700 hover:-translate-y-0.5 hover:border-graphite-500 hover:bg-graphite-100 hover:shadow-card-hover',
         ]"
         @click="$emit('pick')"

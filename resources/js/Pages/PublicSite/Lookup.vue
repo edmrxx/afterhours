@@ -83,7 +83,7 @@ function submit() {
 
                     <button
                         type="submit"
-                        class="mt-6 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-graphite-500 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55"
+                        class="mt-6 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-noir-900 px-5 py-3 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-noir-800 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55"
                         :disabled="form.processing"
                     >
                         <LoaderCircle
