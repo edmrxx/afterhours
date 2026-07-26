@@ -452,12 +452,15 @@ function submitLookup() {
 
             <!--
               No court photo is the common case, so the fallback has to stand on
-              its own: solid brand crimson (no gradient — client asked for a
-              flat red field, not a black-to-red blend), two soft light
-              sources, and an abstract court diagram ruled in the corner.
+              its own: crimson stays the dominant colour (client didn't want the
+              earlier full black->red diagonal back), but a flat fill read as
+              too "2D" — this is a light touch of black in one corner only,
+              fading out fast so most of the field is still pure brand-600.
+              Two soft light sources and an abstract court diagram in the
+              corner add the rest of the depth.
             -->
             <div v-else class="pointer-events-none absolute inset-0" aria-hidden="true">
-                <div class="absolute inset-0 bg-brand-600" />
+                <div class="absolute inset-0 bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600" />
                 <div
                     class="absolute -top-40 -left-32 h-[34rem] w-[34rem] rounded-full bg-graphite-500/30 blur-3xl"
                 />
