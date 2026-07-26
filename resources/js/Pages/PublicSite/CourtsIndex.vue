@@ -452,12 +452,13 @@ function submitLookup() {
 
             <!--
               No court photo is the common case, so the fallback has to stand on
-              its own: a noir→graphite wash, two soft light sources, and an
+              its own: a noir→brand wash (black bleeding into the client's
+              crimson at the opposite corner), two soft light sources, and an
               abstract court diagram ruled in the corner.
             -->
             <div v-else class="pointer-events-none absolute inset-0" aria-hidden="true">
                 <div
-                    class="absolute inset-0 bg-gradient-to-br from-noir-900 via-graphite-800 to-noir-900"
+                    class="absolute inset-0 bg-gradient-to-br from-noir-900 via-brand-900 to-brand-600"
                 />
                 <div
                     class="absolute -top-40 -left-32 h-[34rem] w-[34rem] rounded-full bg-graphite-500/30 blur-3xl"
@@ -476,8 +477,13 @@ function submitLookup() {
                 </div>
             </div>
 
+            <!--
+              Legibility scrim for the text column: darkest right behind the
+              copy/buttons, easing off toward the top so the black->crimson
+              wash underneath still reads instead of flattening to black.
+            -->
             <div
-                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-noir-900 via-noir-900/85 to-noir-900/40"
+                class="pointer-events-none absolute inset-0 bg-gradient-to-t from-noir-900/65 via-noir-900/35 to-transparent"
                 aria-hidden="true"
             />
 
