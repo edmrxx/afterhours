@@ -1200,7 +1200,7 @@ class BookingService
         // silently reports zero slots just because it predates this table.
         $primary = $this->resolveSlot($booking);
 
-        return $primary instanceof CourtSlot ? collect([$primary]) : collect();
+        return new Collection($primary instanceof CourtSlot ? [$primary] : []);
     }
 
     private function courtName(Booking $booking, ?CourtSlot $slot = null): string
