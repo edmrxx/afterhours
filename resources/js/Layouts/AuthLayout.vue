@@ -53,7 +53,9 @@ watch(
 <template>
     <Head :title="title ?? undefined" />
 
-    <div class="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600 px-4 py-10 sm:px-6">
+    <div
+        class="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-brand-600 bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600 px-4 py-10 sm:px-6"
+    >
         <!-- Noir->crimson backdrop: graphite glow above, a soft ash wash below. -->
         <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
             <div

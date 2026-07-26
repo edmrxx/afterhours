@@ -1005,8 +1005,11 @@ function submitLookup() {
 
         <!-- ── Already booked? ────────────────────────────────────────── -->
         <!-- Same subtle noir-corner-into-crimson wash as the hero, so the two
-             dark bands on this page read as one consistent theme. -->
-        <section id="lookup" class="bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600">
+             dark bands on this page read as one consistent theme. bg-brand-600
+             is the solid backdrop the semi-transparent noir-900/35 stop blends
+             against — without it, that transparency shows the page's light
+             background through instead of red, and the corner reads as grey. -->
+        <section id="lookup" class="bg-brand-600 bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600">
             <div class="mx-auto w-full max-w-2xl px-4 py-14 text-center sm:px-6 sm:py-20">
                 <p class="text-[11px] font-semibold tracking-[0.25em] text-ash-400 uppercase">
                     Already booked?
