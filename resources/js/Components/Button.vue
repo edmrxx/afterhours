@@ -32,7 +32,7 @@ const attrs = useAttrs();
 
 const VARIANTS = {
     primary:
-        'bg-noir-900 text-white shadow-card hover:bg-noir-800 hover:shadow-card-hover active:bg-noir-700',
+        'bg-brand-600 text-white shadow-card hover:bg-brand-700 hover:shadow-card-hover active:bg-brand-800',
     secondary:
         'bg-white text-ink-700 border border-ink-200 shadow-card hover:bg-ink-50 hover:text-ink-900 hover:border-ink-300 active:bg-ink-100',
     ghost: 'bg-transparent text-ink-600 hover:bg-ink-100 hover:text-ink-900 active:bg-ink-200',

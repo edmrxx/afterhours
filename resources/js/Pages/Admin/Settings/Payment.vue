@@ -758,7 +758,7 @@ const previewMessage = computed(() => {
                                         Click to upload
                                     </div>
                                     <div
-                                        class="mt-2.5 flex h-9 w-full items-center justify-center rounded-xl bg-noir-900 text-sm font-medium text-white opacity-70"
+                                        class="mt-2.5 flex h-9 w-full items-center justify-center rounded-xl bg-brand-600 text-sm font-medium text-white opacity-70"
                                         aria-hidden="true"
                                     >
                                         Submit payment

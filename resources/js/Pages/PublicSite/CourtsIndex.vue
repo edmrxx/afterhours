@@ -524,9 +524,10 @@ function submitLookup() {
                 </p>
 
                 <div class="mt-8 flex flex-wrap items-center gap-3">
-                    <!-- Noir fill, white text. The hero band is solid crimson, so a black
-                         pill is what reads as the primary action here — the client's rule
-                         is buttons are black, brand red is reserved for fields/surfaces. -->
+                    <!-- Deliberate exception: buttons are brand-600 crimson everywhere else
+                         in the system, but the hero band itself is crimson — a red pill
+                         here would disappear into its own background, so this one stays
+                         noir purely for contrast. -->
                     <a
                         href="#book"
                         class="inline-flex h-12 items-center gap-2 rounded-xl bg-noir-900 px-5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-noir-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40"
@@ -673,7 +674,7 @@ function submitLookup() {
                                             'transition-[background-color,border-color,box-shadow,transform] duration-200 ease-[var(--ease-out-soft)]',
                                             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900',
                                             day.date === selectedDate
-                                                ? 'border-noir-900 bg-noir-900 text-white shadow-card'
+                                                ? 'border-brand-600 bg-brand-600 text-white shadow-card'
                                                 : 'border-bone-300 bg-white text-noir-700 hover:-translate-y-0.5 hover:border-noir-300 hover:shadow-card',
                                         ]"
                                         @click="selectDate(day.date)"
@@ -862,7 +863,7 @@ function submitLookup() {
                                         </span>
                                         <span class="inline-flex items-center gap-1.5">
                                             <span
-                                                class="h-3 w-3 rounded-sm border border-noir-900 bg-noir-900 ring-1 ring-noir-900/25"
+                                                class="h-3 w-3 rounded-sm border border-brand-600 bg-brand-600 ring-1 ring-brand-500/25"
                                                 aria-hidden="true"
                                             />
                                             Selected
@@ -985,7 +986,7 @@ function submitLookup() {
                                 'mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold',
                                 'transition-colors duration-200 ease-[var(--ease-out-soft)]',
                                 chosenSlots.length > 0
-                                    ? 'cursor-pointer bg-noir-900 text-white shadow-card hover:bg-noir-800'
+                                    ? 'cursor-pointer bg-brand-600 text-white shadow-card hover:bg-brand-500'
                                     : 'cursor-not-allowed bg-bone-200 text-noir-400',
                             ]"
                             @click="openDetails"
@@ -1042,8 +1043,9 @@ function submitLookup() {
                         />
                     </div>
 
-                    <!-- The band is crimson now (not flat noir), so a black button
-                         reads fine here again — back to the standard rule. -->
+                    <!-- Deliberate exception, same reasoning as the hero: this band is
+                         crimson, so the button stays noir purely so it doesn't disappear
+                         into its own background. -->
                     <button
                         type="submit"
                         :disabled="lookupForm.processing"
@@ -1165,7 +1167,7 @@ function submitLookup() {
                     type="submit"
                     form="reserve-form"
                     :disabled="form.processing"
-                    class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-noir-900 px-5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-noir-800 disabled:pointer-events-none disabled:opacity-60"
+                    class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-graphite-500 disabled:pointer-events-none disabled:opacity-60"
                 >
                     <LoaderCircle v-if="form.processing" :size="16" class="animate-spin" aria-hidden="true" />
                     Confirm reservation

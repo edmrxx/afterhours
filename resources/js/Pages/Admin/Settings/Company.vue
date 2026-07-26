@@ -443,7 +443,7 @@ const addressLines = computed(() =>
                                 </span>
 
                                 <span
-                                    class="hidden shrink-0 rounded-lg bg-noir-900 px-3 py-1.5 text-[11px] font-medium text-white sm:inline"
+                                    class="hidden shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-[11px] font-medium text-white sm:inline"
                                     aria-hidden="true"
                                 >
                                     Book a court

@@ -289,10 +289,10 @@ const wizardSteps = [
     { label: 'Confirmed' },
 ];
 
-/** Primary action: noir fill, white text (21:1). Ash is never used as a
+/** Primary action: crimson fill, white text (10.9:1). Ash is never used as a
  *  white-text fill — white on ash-500 is ~1.9:1 and fails WCAG. */
 const primaryCta =
-    'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-noir-900 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-noir-800 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900';
+    'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:bg-graphite-500 hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900';
 </script>
 
 <template>
