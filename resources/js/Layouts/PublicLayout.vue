@@ -149,12 +149,9 @@ const year = new Date().getFullYear();
             </div>
         </main>
 
-        <!-- Footer — same subtle noir-corner-into-crimson wash as the hero and
-             the lookup band, so every dark surface in the system reads as one
-             consistent theme rather than a flat black repeated everywhere. -->
-        <footer
-            class="border-t border-noir-900 bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600 text-bone-300"
-        >
+        <!-- Footer — solid black. Client preferred flat noir here over the
+             gradient wash used on the hero/lookup band/login backdrop. -->
+        <footer class="border-t border-noir-900 bg-noir-900 text-bone-300">
             <div
                 class="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-8 text-xs sm:px-6"
             >
