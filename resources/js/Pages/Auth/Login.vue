@@ -105,6 +105,7 @@ function fillDemoCredentials() {
 
             <Button
                 type="submit"
+                variant="dark"
                 size="lg"
                 block
                 :loading="form.processing"

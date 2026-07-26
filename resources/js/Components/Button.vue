@@ -6,7 +6,7 @@ import { LoaderCircle } from '@lucide/vue';
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps({
-    /** primary | secondary | ghost | danger | success */
+    /** primary | dark | secondary | ghost | danger | success */
     variant: { type: String, default: 'primary' },
     /** sm | md | lg */
     size: { type: String, default: 'md' },
@@ -33,6 +33,10 @@ const attrs = useAttrs();
 const VARIANTS = {
     primary:
         'bg-brand-600 text-white shadow-card hover:bg-brand-700 hover:shadow-card-hover active:bg-brand-800',
+    /** Same role as primary, noir fill instead of crimson — used where a
+     *  specific screen wants the black treatment rather than the app-wide
+     *  default (e.g. the login "Sign in" button). */
+    dark: 'bg-noir-900 text-white shadow-card hover:bg-noir-800 hover:shadow-card-hover active:bg-noir-700',
     secondary:
         'bg-white text-ink-700 border border-ink-200 shadow-card hover:bg-ink-50 hover:text-ink-900 hover:border-ink-300 active:bg-ink-100',
     ghost: 'bg-transparent text-ink-600 hover:bg-ink-100 hover:text-ink-900 active:bg-ink-200',
