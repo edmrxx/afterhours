@@ -674,7 +674,7 @@ function submitLookup() {
                                             'transition-[background-color,border-color,box-shadow,transform] duration-200 ease-[var(--ease-out-soft)]',
                                             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900',
                                             day.date === selectedDate
-                                                ? 'border-brand-600 bg-brand-600 text-white shadow-card'
+                                                ? 'border-noir-900 bg-noir-900 text-white shadow-card'
                                                 : 'border-bone-300 bg-white text-noir-700 hover:-translate-y-0.5 hover:border-noir-300 hover:shadow-card',
                                         ]"
                                         @click="selectDate(day.date)"
@@ -986,7 +986,7 @@ function submitLookup() {
                                 'mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold',
                                 'transition-colors duration-200 ease-[var(--ease-out-soft)]',
                                 chosenSlots.length > 0
-                                    ? 'cursor-pointer bg-brand-600 text-white shadow-card hover:bg-brand-500'
+                                    ? 'cursor-pointer bg-noir-900 text-white shadow-card hover:bg-noir-800'
                                     : 'cursor-not-allowed bg-bone-200 text-noir-400',
                             ]"
                             @click="openDetails"
