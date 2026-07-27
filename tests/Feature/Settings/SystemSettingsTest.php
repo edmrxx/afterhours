@@ -56,8 +56,12 @@ class SystemSettingsTest extends TestCase
             'booking_hold_minutes' => 30,
             'booking_verification_hold_minutes' => 720,
             'booking_code_prefix' => 'PHEA',
-            'pricing_non_peak_rate' => 450,
-            'pricing_peak_rate' => 500,
+            // Every cell of the rate grid is required, so the payload carries
+            // all of them — the screen posts the whole form too.
+            'pricing_normal_non_peak_rate' => 450,
+            'pricing_normal_peak_rate' => 500,
+            'pricing_skinny_non_peak_rate' => 150,
+            'pricing_skinny_peak_rate' => 250,
             'pricing_peak_start' => '16:00',
             'pricing_peak_end' => '02:00',
         ], $overrides);
@@ -111,16 +115,16 @@ class SystemSettingsTest extends TestCase
     public function test_an_admin_can_update_the_court_pricing(): void
     {
         $this->actingAs($this->admin())->put('/admin/settings/system', $this->payload([
-            'pricing_non_peak_rate' => 480,
-            'pricing_peak_rate' => 550,
+            'pricing_normal_non_peak_rate' => 480,
+            'pricing_normal_peak_rate' => 550,
             'pricing_peak_start' => '17:00',
             'pricing_peak_end' => '01:00',
         ]))->assertRedirect();
 
         $group = fn (string $key): ?string => Setting::query()->group(Setting::GROUP_SYSTEM)->key($key)->value('value');
 
-        self::assertSame('480.00', $group('pricing_non_peak_rate'));
-        self::assertSame('550.00', $group('pricing_peak_rate'));
+        self::assertSame('480.00', $group('pricing_normal_non_peak_rate'));
+        self::assertSame('550.00', $group('pricing_normal_peak_rate'));
         self::assertSame('17:00', $group('pricing_peak_start'));
         self::assertSame('01:00', $group('pricing_peak_end'));
     }
@@ -149,8 +153,8 @@ class SystemSettingsTest extends TestCase
         $past = CourtSlot::factory()->forCourt($courtB)->onDate(Carbon::yesterday())->atHour(9)->available()->create(['price' => 111.00]);
 
         $this->actingAs($this->admin())->put('/admin/settings/system', $this->payload([
-            'pricing_non_peak_rate' => 480,
-            'pricing_peak_rate' => 550,
+            'pricing_normal_non_peak_rate' => 480,
+            'pricing_normal_peak_rate' => 550,
         ]))->assertRedirect();
 
         self::assertSame(480.00, (float) $nonPeakA->refresh()->price, 'Court A non-peak slot picks up the new rate.');
@@ -164,11 +168,20 @@ class SystemSettingsTest extends TestCase
         $court = Court::factory()->create();
         $slot = CourtSlot::factory()->forCourt($court)->onDate(Carbon::today()->addDay())->atHour(9)->available()->create(['price' => 111.00]);
 
-        // The pricing fields match the shipped defaults, so only the hold time
-        // changes — the schedule must be left exactly as it is.
+        // Every pricing field is posted back at exactly the shipped default, so
+        // only the hold time changes and the schedule must be left as it is.
+        // Read from config rather than typed, so moving a default rate cannot
+        // silently turn this into a "pricing changed" save and stop testing the
+        // thing it is named after.
         $this->actingAs($this->admin())->put('/admin/settings/system', $this->payload([
             'booking_hold_minutes' => 45,
             'booking_verification_hold_minutes' => 900,
+            'pricing_normal_non_peak_rate' => config('booking.pricing.categories.normal.non_peak_rate'),
+            'pricing_normal_peak_rate' => config('booking.pricing.categories.normal.peak_rate'),
+            'pricing_skinny_non_peak_rate' => config('booking.pricing.categories.skinny.non_peak_rate'),
+            'pricing_skinny_peak_rate' => config('booking.pricing.categories.skinny.peak_rate'),
+            'pricing_peak_start' => config('booking.pricing.peak_start'),
+            'pricing_peak_end' => config('booking.pricing.peak_end'),
         ]))->assertRedirect();
 
         self::assertSame(111.00, (float) $slot->refresh()->price, 'An unrelated settings save must not reprice anything.');
@@ -185,14 +198,14 @@ class SystemSettingsTest extends TestCase
         });
 
         $this->actingAs($this->admin())->put('/admin/settings/system', $this->payload([
-            'pricing_non_peak_rate' => 480,
+            'pricing_normal_non_peak_rate' => 480,
         ]))->assertStatus(500);
 
         // The rate write shares the reprice's transaction, so it rolled back too —
         // a plain re-save is then a genuine retry, not a pricingChanged() no-op.
         self::assertNotSame(
             '480.00',
-            Setting::query()->group(Setting::GROUP_SYSTEM)->key('pricing_non_peak_rate')->value('value'),
+            Setting::query()->group(Setting::GROUP_SYSTEM)->key('pricing_normal_non_peak_rate')->value('value'),
             'A failed reprice must roll the rate change back with it.',
         );
 
@@ -205,7 +218,7 @@ class SystemSettingsTest extends TestCase
         CourtSlot::factory()->forCourt($court)->onDate(Carbon::today()->addDay())->atHour(9)->available()->create(['price' => 111.00]);
 
         $this->actingAs($this->admin())->put('/admin/settings/system', $this->payload([
-            'pricing_non_peak_rate' => 480,
+            'pricing_normal_non_peak_rate' => 480,
         ]))->assertRedirect();
 
         $entry = AuditTrail::query()

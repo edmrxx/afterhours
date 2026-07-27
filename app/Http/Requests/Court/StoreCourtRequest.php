@@ -26,10 +26,16 @@ class StoreCourtRequest extends FormRequest
     {
         $sortOrder = $this->input('sort_order');
 
+        $category = $this->trimmed('category');
+
         $this->merge([
             'name' => $this->trimmed('name'),
             // Codes are shouted on signage and read over the phone: one case.
             'code' => $this->trimmed('code') === null ? null : mb_strtoupper((string) $this->trimmed('code')),
+            // An absent category means "the ordinary kind of court" — the same
+            // default the column carries — so a form that never showed the field
+            // still validates rather than failing on a required rule.
+            'category' => $category ?? Court::CATEGORY_NORMAL,
             'description' => $this->trimmed('description'),
             'is_active' => $this->boolean('is_active'),
             'sort_order' => $sortOrder === '' || $sortOrder === null ? 0 : $sortOrder,
@@ -61,6 +67,11 @@ class StoreCourtRequest extends FormRequest
                 // so allowing a reused code here would only fail at the database.
                 Rule::unique('courts', 'code'),
             ],
+            // The category decides what this court charges (see
+            // App\Services\PricingService), so an unrecognised value would price
+            // the court at the normal rate without anyone being told. Restrict
+            // it to the keys the rate table actually has a row for.
+            'category' => ['required', 'string', Rule::in(Court::categoryKeys())],
             'description' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['required', 'boolean'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:65535'],
@@ -89,6 +100,7 @@ class StoreCourtRequest extends FormRequest
             'code.required' => 'A short code is required, for example CRT-01.',
             'code.unique' => 'That code is already taken. Codes must stay unique, including for deleted courts.',
             'code.regex' => 'Use letters, numbers and hyphens only, starting with a letter or number (e.g. CRT-01).',
+            'category.in' => 'Pick a court type — this is what decides the hourly rate.',
             'sort_order.integer' => 'Display order must be a whole number.',
             'photo.image' => 'The photo must be an image file.',
             'photo.mimes' => 'The photo must be a JPG, PNG or WEBP file.',
@@ -106,6 +118,7 @@ class StoreCourtRequest extends FormRequest
         return [
             'sort_order' => 'display order',
             'is_active' => 'status',
+            'category' => 'court type',
         ];
     }
 

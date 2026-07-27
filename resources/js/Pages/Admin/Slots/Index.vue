@@ -413,17 +413,20 @@ async function reprice() {
         return;
     }
 
-    const nonPeak = props.pricing?.non_peak ?? {};
-    const peak = props.pricing?.peak ?? {};
+    // The money comes from THIS court's type, not a club-wide table — quoting
+    // the wrong type's figures in a confirmation is how an operator approves a
+    // reprice they did not mean.
+    const rates = court.rates ?? {};
+    const typeLabel = court.category_label ?? 'court type';
     const money = (value) => `₱${Number(value ?? 0).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
     const confirmed = await confirmAction({
         title: `Reprice ${court.name} to current rates?`,
         html:
-            `<p style="margin:0">Every <strong>available</strong> slot on ${court.name} from today onward will be updated to the club-wide rates:</p>` +
+            `<p style="margin:0">Every <strong>available</strong> slot on ${court.name} from today onward will be updated to the <strong>${typeLabel}</strong> rates:</p>` +
             '<ul style="text-align:left;margin:.6rem 0 0;padding-left:1.1rem">' +
-            `<li>Non-peak — ${money(nonPeak.rate)}</li>` +
-            `<li>Peak — ${money(peak.rate)}</li>` +
+            `<li>Non-peak — ${money(rates.non_peak)}</li>` +
+            `<li>Peak — ${money(rates.peak)}</li>` +
             '</ul>' +
             '<p style="margin:.6rem 0 0;font-size:.875rem">Held and booked slots are never touched, so no live booking can be affected. This cannot be undone from this screen.</p>',
         confirmText: 'Yes, reprice it',

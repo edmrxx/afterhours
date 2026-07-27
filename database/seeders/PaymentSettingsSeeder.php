@@ -56,8 +56,8 @@ class PaymentSettingsSeeder extends Seeder
             // human label DERIVED from these on save — kept as its own row so
             // existing readers (the header preview) need no change.
             'operating_opening_time' => ['string', '07:00'],
-            'operating_closing_time' => ['string', '02:00'],
-            'operating_hours' => ['string', '7:00 AM – 2:00 AM daily'],
+            'operating_closing_time' => ['string', '00:00'],
+            'operating_hours' => ['string', '7:00 AM – 12:00 MN daily'],
         ],
 
         Setting::GROUP_THEME => [
@@ -86,14 +86,22 @@ class PaymentSettingsSeeder extends Seeder
             // touching .env — see Booking::codePrefix().
             'booking_code_prefix' => ['string', 'AH'],
 
-            // Global court pricing — a rate per tier plus the peak clock window
-            // (non-peak is every hour outside it). The peak window deliberately
-            // crosses midnight (4pm–2am). Overrides config('booking.pricing.*')
+            // Court pricing — one rate per (court category, tier) pair, plus the
+            // single peak clock window every category shares (non-peak is every
+            // hour outside it). These figures are the client's published rate
+            // card: full-size courts at 550/650, the Skinny Court at 200/300,
+            // with the evening band running 5PM to midnight.
+            //
+            // The window may cross midnight, so a club trading later only moves
+            // `pricing_peak_end` (e.g. to 02:00) — PricingService resolves the
+            // wrap with no code change. Overrides config('booking.pricing.*')
             // without touching .env — read through App\Services\PricingService.
-            'pricing_non_peak_rate' => ['string', '450'],
-            'pricing_peak_rate' => ['string', '500'],
-            'pricing_peak_start' => ['string', '16:00'],
-            'pricing_peak_end' => ['string', '02:00'],
+            'pricing_normal_non_peak_rate' => ['string', '550'],
+            'pricing_normal_peak_rate' => ['string', '650'],
+            'pricing_skinny_non_peak_rate' => ['string', '200'],
+            'pricing_skinny_peak_rate' => ['string', '300'],
+            'pricing_peak_start' => ['string', '17:00'],
+            'pricing_peak_end' => ['string', '00:00'],
         ],
     ];
 

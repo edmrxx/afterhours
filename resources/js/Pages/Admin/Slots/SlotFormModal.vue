@@ -24,7 +24,12 @@ const props = defineProps({
     courts: { type: Array, default: () => [] },
     courtId: { type: [Number, String], default: null },
     date: { type: String, default: null },
-    /** The club-wide rate table: { non_peak: { rate, start, end }, peak: { rate, start, end } }. */
+    /**
+     * The shared tier windows: { window: { peak: { start, end }, non_peak: {…} } }.
+     * The MONEY is not here — it lives on each court in `courts[].rates`,
+     * because two courts of different types charge differently for the same
+     * hour.
+     */
     pricing: { type: Object, default: () => ({}) },
 });
 
@@ -61,7 +66,7 @@ function minutesOf(hhmm) {
     return match ? Number(match[1]) * 60 + Number(match[2]) : null;
 }
 
-/** Wrap-aware [start, end): a peak window of 16:00→02:00 covers the small hours. */
+/** Wrap-aware [start, end): a peak window of 17:00→00:00 covers the evening. */
 function inWindow(min, start, end) {
     if (start === end) {
         return false;
@@ -70,28 +75,38 @@ function inWindow(min, start, end) {
     return start < end ? min >= start && min < end : min >= start || min < end;
 }
 
+/** The two rates the given court charges, decided by its court type. */
+function ratesForCourt(courtId) {
+    const court = props.courts.find((candidate) => String(candidate.id) === String(courtId));
+
+    return court?.rates ?? {};
+}
+
 /**
- * The club-wide rate for a slot starting at the given time — peak when it falls
- * in the (possibly past-midnight) peak window, non-peak otherwise. Pricing is
- * global, so the court no longer matters.
+ * The rate for a slot on the given court starting at the given time — peak when
+ * it falls in the (possibly past-midnight) peak window, non-peak otherwise.
+ *
+ * The WINDOW is club-wide but the MONEY is not: the same 7 PM hour is priced
+ * one way on a full-size court and another on the Skinny Court, so the court
+ * matters again and both arguments are required.
  */
-function rateForTime(startTime) {
-    const nonPeak = props.pricing?.non_peak ?? {};
-    const peak = props.pricing?.peak ?? {};
+function rateForTime(startTime, courtId) {
+    const rates = ratesForCourt(courtId);
+    const peakWindow = props.pricing?.window?.peak ?? {};
     const min = minutesOf(startTime);
 
     if (min === null) {
-        return String(nonPeak.rate ?? '');
+        return String(rates.non_peak ?? '');
     }
 
-    const peakStart = minutesOf(peak.start);
-    const peakEnd = minutesOf(peak.end);
+    const peakStart = minutesOf(peakWindow.start);
+    const peakEnd = minutesOf(peakWindow.end);
 
     if (peakStart !== null && peakEnd !== null && inWindow(min, peakStart, peakEnd)) {
-        return String(peak.rate ?? '');
+        return String(rates.peak ?? '');
     }
 
-    return String(nonPeak.rate ?? '');
+    return String(rates.non_peak ?? '');
 }
 
 /** Repopulate whenever the dialog opens, so a cancelled edit never leaks. */
@@ -121,19 +136,22 @@ watch(
         form.slot_date = props.date ?? today;
         form.start_time = '08:00';
         form.end_time = '09:00';
-        form.price = rateForTime(form.start_time);
+        form.price = rateForTime(form.start_time, form.court_id);
         form.status = 'available';
     },
     { immediate: true },
 );
 
-// In create mode, the start time drives the rate (non-peak vs peak). Pricing is
-// global now, so the court no longer matters — the admin can still override.
+// In create mode BOTH inputs move the price: the start time sorts the hour into
+// a tier, and the court decides what that tier costs on its type. Switching from
+// a full-size court to the Skinny Court has to move the figure, or the admin
+// silently saves a slot at four times the intended rate. The admin can still
+// type over whatever this suggests.
 watch(
-    () => form.start_time,
-    (startTime) => {
+    [() => form.start_time, () => form.court_id],
+    ([startTime, courtId]) => {
         if (!editing.value && props.modelValue) {
-            form.price = rateForTime(startTime);
+            form.price = rateForTime(startTime, courtId);
         }
     },
 );

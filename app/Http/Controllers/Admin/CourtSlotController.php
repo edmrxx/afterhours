@@ -64,11 +64,13 @@ class CourtSlotController extends Controller
 
     public function index(Request $request): Response
     {
-        // Pricing is global now, so the court rows carry no rate of their own —
-        // the generator modal reads the club-wide table passed as `pricing`.
+        // A court's rate comes from its CATEGORY's row of the rate table, so
+        // each court row carries the two rates it actually charges — that is
+        // what the generator and add-slot modals stamp, and reading it here
+        // means neither modal has to re-derive money from a category key.
         $courts = Court::query()
             ->ordered()
-            ->get(['id', 'name', 'code', 'slug', 'is_active']);
+            ->get(['id', 'name', 'code', 'slug', 'category', 'is_active']);
 
         $courtId = $this->resolveCourtId($request, $courts);
         [$from, $to] = $this->resolveRange($request);
@@ -102,14 +104,26 @@ class CourtSlotController extends Controller
         $slots->through(fn (CourtSlot $slot): array => $this->presentSlot($slot));
 
         return Inertia::render('Admin/Slots/Index', [
-            'courts' => $courts->map(fn (Court $court): array => [
-                'id' => $court->id,
-                'name' => $court->name,
-                'code' => $court->code,
-                'is_active' => $court->is_active,
-            ])->values(),
-            // The club-wide rate table, so the generator/add modals can show the
-            // rates they will stamp without any per-court lookup.
+            'courts' => $courts->map(function (Court $court): array {
+                $rates = $this->pricing->rates($court->categoryKey());
+
+                return [
+                    'id' => $court->id,
+                    'name' => $court->name,
+                    'code' => $court->code,
+                    'category' => $court->categoryKey(),
+                    'category_label' => $court->categoryLabel(),
+                    // The money this court charges, already resolved per tier.
+                    'rates' => [
+                        'non_peak' => $rates[PricingService::TIER_NON_PEAK],
+                        'peak' => $rates[PricingService::TIER_PEAK],
+                    ],
+                    'is_active' => $court->is_active,
+                ];
+            })->values(),
+            // The shared peak window plus every category's rates — the window is
+            // what sorts an hour into a tier; the selected court's own `rates`
+            // above decide what that tier costs.
             'pricing' => $this->pricing->bounds(),
             'slots' => $slots,
             'days' => $this->calendarDays($from, $to),

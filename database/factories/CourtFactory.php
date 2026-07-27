@@ -35,10 +35,13 @@ class CourtFactory extends Factory
             'name' => $name,
             'slug' => Str::slug($name),
             'code' => 'CRT-'.$sequence,
+            // The court carries no rate of its own: its CATEGORY selects a row
+            // of the rate table in settings (App\Services\PricingService).
+            // Factories default to the ordinary kind so a test that says nothing
+            // about pricing gets the full-size rates.
+            'category' => Court::CATEGORY_NORMAL,
             'description' => fake()->sentence(14),
             'photo_path' => null,
-            // Pricing is club-wide now (App\Services\PricingService), so a court
-            // carries no rate of its own.
             'is_active' => true,
             'sort_order' => fake()->numberBetween(0, 20),
         ];
@@ -48,6 +51,22 @@ class CourtFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'is_active' => false,
+        ]);
+    }
+
+    /** A court on the cheaper Skinny Court rate row. */
+    public function skinny(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'category' => Court::CATEGORY_SKINNY,
+        ]);
+    }
+
+    /** A court on the full-size rate row — the default, stated explicitly. */
+    public function normal(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'category' => Court::CATEGORY_NORMAL,
         ]);
     }
 }

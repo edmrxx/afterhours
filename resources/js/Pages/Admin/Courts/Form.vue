@@ -9,6 +9,7 @@ import Button from '@/Components/Button.vue';
 import Card from '@/Components/Card.vue';
 import FormFileUpload from '@/Components/FormFileUpload.vue';
 import FormInput from '@/Components/FormInput.vue';
+import FormSelect from '@/Components/FormSelect.vue';
 import FormTextarea from '@/Components/FormTextarea.vue';
 import FormToggle from '@/Components/FormToggle.vue';
 import PageHeader from '@/Components/PageHeader.vue';
@@ -24,6 +25,12 @@ const props = defineProps({
     court: { type: Object, default: null },
     /** Suggested display order for a new court. */
     nextSortOrder: { type: Number, default: 0 },
+    /**
+     * The court types, each with the two rates it currently charges:
+     * `{ value, label, non_peak, peak }`. Comes from the server so this screen
+     * never hard-codes the list, and the money shown is always live.
+     */
+    categories: { type: Array, default: () => [] },
 });
 
 const { confirmAction } = useSwal();
@@ -33,12 +40,36 @@ const isEdit = computed(() => props.court !== null);
 const form = useForm({
     name: props.court?.name ?? '',
     code: props.court?.code ?? '',
+    // A new court defaults to the first type on the list — the ordinary kind,
+    // and the same default the column itself carries.
+    category: props.court?.category ?? props.categories[0]?.value ?? 'normal',
     description: props.court?.description ?? '',
     is_active: props.court?.is_active ?? true,
     sort_order: props.court?.sort_order ?? props.nextSortOrder ?? 0,
     photo: null,
     remove_photo: false,
 });
+
+/* ------------------------------------------------------------------ */
+/* Court type                                                          */
+/* ------------------------------------------------------------------ */
+
+const peso = new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+});
+
+/** The rates the currently selected type charges, for the live hint below. */
+const selectedCategory = computed(
+    () => props.categories.find((category) => category.value === form.category) ?? null,
+);
+
+/** True once an existing court is being moved to a different type. */
+const categoryChanged = computed(
+    () => isEdit.value && props.court?.category != null && form.category !== props.court.category,
+);
 
 /* ------------------------------------------------------------------ */
 /* Code suggestion                                                     */
@@ -276,13 +307,55 @@ const backHref = computed(() =>
 
                 <Card
                     title="Pricing"
-                    subtitle="Court pricing is set club-wide, not per court."
+                    subtitle="The court type decides what this court charges per hour."
                 >
-                    <Alert
-                        variant="info"
-                        title="Pricing is global"
-                        message="Every court charges the same non-peak and peak rates. Set them under Settings › Booking › Court pricing — they apply to all courts automatically."
-                    />
+                    <div class="space-y-4">
+                        <FormSelect
+                            v-model="form.category"
+                            label="Court type"
+                            :options="categories"
+                            required
+                            :disabled="!categories.length"
+                            :error="form.errors.category"
+                            hint="Courts of the same type always charge the same rates."
+                        />
+
+                        <!-- The money the choice commits to, read live from the
+                             rate table so it can never show a stale figure. -->
+                        <div
+                            v-if="selectedCategory"
+                            class="rounded-xl border border-ink-200 bg-ink-50/50 p-4"
+                        >
+                            <p class="mb-3 text-sm font-semibold text-ink-800">
+                                {{ selectedCategory.label }} charges
+                            </p>
+                            <dl class="space-y-2">
+                                <div class="flex items-center justify-between gap-3">
+                                    <dt class="text-sm text-ink-600">Non-peak</dt>
+                                    <dd class="text-sm font-semibold text-ink-900">
+                                        {{ peso.format(selectedCategory.non_peak) }} / hr
+                                    </dd>
+                                </div>
+                                <div class="flex items-center justify-between gap-3">
+                                    <dt class="text-sm text-ink-600">Peak</dt>
+                                    <dd class="text-sm font-semibold text-ink-900">
+                                        {{ peso.format(selectedCategory.peak) }} / hr
+                                    </dd>
+                                </div>
+                            </dl>
+                            <p class="mt-3 text-xs text-ink-500">
+                                Change the amounts under Settings › Booking › Court pricing. They apply
+                                to every court of this type.
+                            </p>
+                        </div>
+
+                        <Alert
+                            v-if="categoryChanged"
+                            variant="warning"
+                            title="Slots already generated keep their old price"
+                            message="Rates are forward-only: changing the type here prices NEW slots at the new rates, but the schedule already on the books is untouched. Use Reprice on the Slots screen to move existing available slots across."
+                        />
+                    </div>
                 </Card>
 
                 <Card title="Ordering">

@@ -11,6 +11,7 @@ use App\Models\Booking;
 use App\Models\Court;
 use App\Models\CourtSlot;
 use App\Services\AuditTrailService;
+use App\Services\PricingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
@@ -43,6 +44,7 @@ class CourtController extends Controller
     private const SORTABLE = [
         'name' => 'name',
         'code' => 'code',
+        'category' => 'category',
         'sort_order' => 'sort_order',
         'created_at' => 'created_at',
         'available_slots_count' => 'available_slots_count',
@@ -68,7 +70,10 @@ class CourtController extends Controller
     /** Directory on the `public` disk that court photos live in. */
     private const PHOTO_DIRECTORY = 'courts';
 
-    public function __construct(private readonly AuditTrailService $audit) {}
+    public function __construct(
+        private readonly AuditTrailService $audit,
+        private readonly PricingService $pricing,
+    ) {}
 
     /* ------------------------------------------------------------------ */
     /* Read                                                                */
@@ -84,7 +89,7 @@ class CourtController extends Controller
             // `description` is a TEXT column nobody reads in a list — leaving it
             // out keeps the row payload small on a wide result set.
             ->select([
-                'id', 'name', 'slug', 'code', 'photo_path',
+                'id', 'name', 'slug', 'code', 'category', 'photo_path',
                 'is_active', 'sort_order', 'created_at',
             ])
             ->withCount([
@@ -199,6 +204,7 @@ class CourtController extends Controller
         return Inertia::render('Admin/Courts/Form', [
             'court' => null,
             'nextSortOrder' => (int) (Court::query()->max('sort_order') ?? -1) + 1,
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
@@ -209,6 +215,7 @@ class CourtController extends Controller
         return Inertia::render('Admin/Courts/Form', [
             'court' => $this->detailPayload($court),
             'nextSortOrder' => (int) $court->sort_order,
+            'categories' => $this->categoryOptions(),
         ]);
     }
 
@@ -223,6 +230,7 @@ class CourtController extends Controller
             $court = DB::transaction(fn (): Court => Court::create([
                 'name' => $data['name'],
                 'code' => $data['code'],
+                'category' => $data['category'],
                 'description' => $data['description'] ?? null,
                 'is_active' => (bool) $data['is_active'],
                 'sort_order' => (int) $data['sort_order'],
@@ -260,6 +268,7 @@ class CourtController extends Controller
                 $court->fill([
                     'name' => $data['name'],
                     'code' => $data['code'],
+                    'category' => $data['category'],
                     'description' => $data['description'] ?? null,
                     'is_active' => (bool) $data['is_active'],
                     'sort_order' => (int) $data['sort_order'],
@@ -449,6 +458,8 @@ class CourtController extends Controller
             'name' => $court->name,
             'slug' => $court->slug,
             'code' => $court->code,
+            'category' => $court->categoryKey(),
+            'category_label' => $court->categoryLabel(),
             'photo_url' => $this->photoUrl($court->photo_path),
             'is_active' => (bool) $court->is_active,
             'sort_order' => (int) $court->sort_order,
@@ -469,6 +480,8 @@ class CourtController extends Controller
             'name' => $court->name,
             'slug' => $court->slug,
             'code' => $court->code,
+            'category' => $court->categoryKey(),
+            'category_label' => $court->categoryLabel(),
             'description' => $court->description,
             'photo_url' => $this->photoUrl($court->photo_path),
             'has_photo' => $court->photo_path !== null,
@@ -482,6 +495,35 @@ class CourtController extends Controller
     private function userCan(string $ability, Court $court): bool
     {
         return request()->user()?->can($ability, $court) ?? false;
+    }
+
+    /**
+     * The court-type dropdown.
+     *
+     * Each option carries the two rates that type currently charges, so the
+     * operator choosing between "Normal Court" and "Skinny Court" sees the
+     * money the choice commits them to without leaving the form to go and read
+     * Settings. The rates are read live rather than stored on the option, so
+     * this can never show a figure the pricing table has since moved off.
+     *
+     * @return list<array{value: string, label: string, non_peak: float, peak: float}>
+     */
+    private function categoryOptions(): array
+    {
+        $options = [];
+
+        foreach (Court::CATEGORIES as $value => $label) {
+            $rates = $this->pricing->rates($value);
+
+            $options[] = [
+                'value' => $value,
+                'label' => $label,
+                'non_peak' => $rates[PricingService::TIER_NON_PEAK],
+                'peak' => $rates[PricingService::TIER_PEAK],
+            ];
+        }
+
+        return $options;
     }
 
     /* ------------------------------------------------------------------ */

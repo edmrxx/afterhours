@@ -26,8 +26,8 @@ class SlotRepriceTest extends TestCase
     {
         parent::setUp();
 
-        config()->set('booking.pricing.non_peak_rate', 450);
-        config()->set('booking.pricing.peak_rate', 500);
+        config()->set('booking.pricing.categories.normal.non_peak_rate', 450);
+        config()->set('booking.pricing.categories.normal.peak_rate', 500);
         config()->set('booking.pricing.peak_start', '16:00');
         config()->set('booking.pricing.peak_end', '02:00');
     }

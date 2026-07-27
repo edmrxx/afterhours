@@ -28,6 +28,10 @@ class UpdateCourtRequest extends FormRequest
         $this->merge([
             'name' => $this->trimmed('name'),
             'code' => $code === null ? null : mb_strtoupper($code),
+            // A request that omits the field keeps the court on the category it
+            // already has — never silently repriced to the normal rate by a
+            // partial submission.
+            'category' => $this->trimmed('category') ?? $this->court()?->categoryKey() ?? Court::CATEGORY_NORMAL,
             'description' => $this->trimmed('description'),
             'is_active' => $this->boolean('is_active'),
             'remove_photo' => $this->boolean('remove_photo'),
@@ -61,6 +65,11 @@ class UpdateCourtRequest extends FormRequest
                 // still holds their code, so permitting it here would 500 later.
                 Rule::unique('courts', 'code')->ignore($ignore),
             ],
+            // The category decides what this court charges (see
+            // App\Services\PricingService). Changing it does NOT reprice slots
+            // that already exist — rates are forward-only — so an operator who
+            // moves a court between types reprices from the Slots screen.
+            'category' => ['required', 'string', Rule::in(Court::categoryKeys())],
             'description' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['required', 'boolean'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:65535'],
@@ -89,6 +98,7 @@ class UpdateCourtRequest extends FormRequest
             'code.required' => 'A short code is required, for example CRT-01.',
             'code.unique' => 'That code is already taken. Codes must stay unique, including for deleted courts.',
             'code.regex' => 'Use letters, numbers and hyphens only, starting with a letter or number (e.g. CRT-01).',
+            'category.in' => 'Pick a court type — this is what decides the hourly rate.',
             'sort_order.integer' => 'Display order must be a whole number.',
             'photo.image' => 'The photo must be an image file.',
             'photo.mimes' => 'The photo must be a JPG, PNG or WEBP file.',
@@ -106,6 +116,7 @@ class UpdateCourtRequest extends FormRequest
         return [
             'sort_order' => 'display order',
             'is_active' => 'status',
+            'category' => 'court type',
         ];
     }
 

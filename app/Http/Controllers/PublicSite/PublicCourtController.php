@@ -100,7 +100,7 @@ class PublicCourtController extends Controller
                     ->where('status', CourtSlot::STATUS_AVAILABLE)
                     ->upcoming(),
             ])
-            ->get(['id', 'name', 'slug', 'description', 'photo_path', 'sort_order']);
+            ->get(['id', 'name', 'slug', 'category', 'description', 'photo_path', 'sort_order']);
 
         $company = $this->companyBlurb();
         $holdMinutes = (int) ($this->settings->get(Setting::GROUP_SYSTEM, 'booking_hold_minutes') ?: config('booking.hold_minutes', 30));
@@ -148,10 +148,14 @@ class PublicCourtController extends Controller
                     'name' => (string) $court->name,
                     'slug' => (string) $court->slug,
                     'description' => $court->description,
+                    'category' => $court->categoryKey(),
+                    'category_label' => $court->categoryLabel(),
                     'photo_url' => $this->publicUrl($court->photo_path),
-                    // Pricing is club-wide: a court with nothing open today shows
-                    // the global "from" rate rather than a per-court base price.
-                    'from_price' => $summary['from_price'] ?? $this->pricing->fromRate(),
+                    // A court with nothing open today falls back to its own
+                    // CATEGORY's cheapest rate, never the club-wide minimum —
+                    // otherwise a full-size court would advertise the Skinny
+                    // Court's price on any day it happened to be fully booked.
+                    'from_price' => $summary['from_price'] ?? $this->pricing->fromRateFor($court->categoryKey()),
                     'available_slots_count' => (int) ($court->available_slots_count ?? 0),
                     'available_today_count' => (int) ($summary['available_count'] ?? 0),
                 ];
@@ -163,8 +167,10 @@ class PublicCourtController extends Controller
                 'name' => (string) $highlight->name,
                 'slug' => (string) $highlight->slug,
                 'description' => $highlight->description,
+                'category' => $highlight->categoryKey(),
+                'category_label' => $highlight->categoryLabel(),
                 'photo_url' => $this->publicUrl($highlight->photo_path),
-                'from_price' => $this->pricing->fromRate(),
+                'from_price' => $this->pricing->fromRateFor($highlight->categoryKey()),
             ],
 
             // Every day in the horizon that still has something to sell, on

@@ -26,7 +26,11 @@ import { useSwal } from '@/Composables/useSwal';
 const props = defineProps({
     modelValue: { type: Boolean, default: false },
     courts: { type: Array, default: () => [] },
-    /** The club-wide rate table: { non_peak: { rate, start, end }, peak: { rate, start, end } }. */
+    /**
+     * The shared tier windows: { window: { non_peak: { start, end }, peak: {…} } }.
+     * The money is not here — each court carries the rates its type charges in
+     * `courts[].rates`.
+     */
     pricing: { type: Object, default: () => ({}) },
     courtId: { type: [Number, String], default: null },
     from: { type: String, default: null },
@@ -115,15 +119,21 @@ function to12h(hhmm) {
  * The club-wide rate table as a display list — one card per tier, with its rate
  * and the clock window it covers.
  */
+/** The court this run will write to — its type decides the money below. */
+const selectedCourt = computed(
+    () => props.courts.find((court) => String(court.id) === String(form.court_id)) ?? null,
+);
+
 const tierRates = computed(() =>
     ['non_peak', 'peak'].map((key) => {
-        const tier = props.pricing?.[key] ?? {};
+        // The window is club-wide; the amount is this court's type's.
+        const window = props.pricing?.window?.[key] ?? {};
 
         return {
             key,
             label: TIER_LABELS[key],
-            hours: tier.start && tier.end ? `${to12h(tier.start)}–${to12h(tier.end)}` : '',
-            amount: Number(tier.rate ?? 0),
+            hours: window.start && window.end ? `${to12h(window.start)}–${to12h(window.end)}` : '',
+            amount: Number(selectedCourt.value?.rates?.[key] ?? 0),
         };
     }),
 );
@@ -173,9 +183,10 @@ watch(
 );
 
 // Turning the override off clears any figure so the run reverts cleanly to the
-// global rates; turning it on seeds the field with the non-peak rate as a start.
+// court type's rates; turning it on seeds the field with this court's non-peak
+// rate as a start.
 watch(overridePrice, (on) => {
-    form.price = on ? String(props.pricing?.non_peak?.rate ?? '') : '';
+    form.price = on ? String(selectedCourt.value?.rates?.non_peak ?? '') : '';
 });
 
 /* --------------------------------------------------------------------- */
@@ -410,7 +421,9 @@ function close() {
                 <!-- Default: show what each tier will be charged, read-only. -->
                 <div v-if="!overridePrice" class="mt-3">
                     <p class="text-xs text-ink-500">
-                        Each slot is priced from the club-wide rate table. Edit these under
+                        Each slot is priced from the
+                        <span class="font-medium text-ink-700">{{ selectedCourt?.category_label ?? 'court type' }}</span>
+                        rates. Edit these under
                         <span class="font-medium text-ink-700">Settings › Booking › Court pricing</span>.
                     </p>
 

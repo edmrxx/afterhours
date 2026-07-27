@@ -64,7 +64,7 @@ class SlotGeneratorService
     public function preview(Court $court, array $params): array
     {
         $plan = $this->plan($params);
-        $pricing = $this->pricing($plan, $this->overridePrice($params));
+        $pricing = $this->pricing($plan, $this->overridePrice($params), $court->categoryKey());
 
         if ($plan['total'] === 0 || $plan['total'] > $plan['limit']) {
             return $this->summary($plan, existing: 0, created: 0, pricing: $pricing);
@@ -103,7 +103,7 @@ class SlotGeneratorService
         }
 
         $override = $this->overridePrice($params);
-        $pricing = $this->pricing($plan, $override);
+        $pricing = $this->pricing($plan, $override, $court->categoryKey());
         $timestamp = now();
         $created = 0;
 
@@ -175,9 +175,11 @@ class SlotGeneratorService
         $breakdown = [];
         $total = 0;
 
-        DB::transaction(function () use ($courtId, $from, $to, $withBreakdown, &$breakdown, &$total): void {
+        $category = $court->categoryKey();
+
+        DB::transaction(function () use ($courtId, $category, $from, $to, $withBreakdown, &$breakdown, &$total): void {
             foreach ([PricingService::TIER_NON_PEAK, PricingService::TIER_PEAK] as $tier) {
-                $rate = round($this->pricing->rateForTier($tier), 2);
+                $rate = round($this->pricing->rateForTier($tier, $category), 2);
 
                 $scope = fn () => $this->pricing->constrainToTier(
                     CourtSlot::query()
@@ -440,6 +442,7 @@ class SlotGeneratorService
         $validStarts = array_column($windowSlots, 'start');
         $today = CarbonImmutable::today()->toDateString();
         $courtId = (int) $court->getKey();
+        $category = $court->categoryKey();
 
         // Last line of defence: an empty valid-set must NEVER reach the
         // whereNotIn() delete below — the query grammar turns an empty NOT IN into
@@ -472,13 +475,13 @@ class SlotGeneratorService
         $datesSkipped = 0;
 
         DB::transaction(function () use (
-            $courtId, $windowSlots, $validStarts, $windowIntervals, $today,
+            $courtId, $category, $windowSlots, $validStarts, $windowIntervals, $today,
             &$added, &$removed, &$keptHistory, &$blockedInWindow, &$datesTouched, &$datesSkipped
         ): void {
             // One price lookup per distinct in-window start, reused across dates.
             $prices = [];
             foreach ($validStarts as $start) {
-                $prices[$start] ??= round($this->pricing->rateFor($start), 2);
+                $prices[$start] ??= round($this->pricing->rateFor($start, $category), 2);
             }
 
             $timestamp = now();
@@ -860,7 +863,7 @@ class SlotGeneratorService
         $courtId = $court->getKey();
         // One price lookup per distinct start time rather than one per row: a
         // 2,000 slot run resolves at most `slots_per_day` rates.
-        $prices = $this->pricesByStartTime($plan, $override);
+        $prices = $this->pricesByStartTime($plan, $override, $court->categoryKey());
         $chunk = [];
 
         foreach ($plan['dates'] as $date) {
@@ -914,20 +917,21 @@ class SlotGeneratorService
      * Resolve the price for every distinct start time in the plan, once.
      *
      * With an override in force every start time maps to that one figure;
-     * otherwise each maps to `PricingService::rateFor()` for that clock time, so
-     * the same pass produces non-peak- and peak-priced rows.
+     * otherwise each maps to `PricingService::rateFor()` for that clock time and
+     * the court's category, so the same pass produces non-peak- and peak-priced
+     * rows at the rates that category charges.
      *
      * @param  array{times: list<array{start: string, end: string}>, ...}  $plan
      * @return array<string, float>  keyed by the "H:i:s" start time
      */
-    private function pricesByStartTime(array $plan, ?float $override): array
+    private function pricesByStartTime(array $plan, ?float $override, string $category): array
     {
         $prices = [];
 
         foreach ($plan['times'] as $time) {
             $start = $time['start'];
 
-            $prices[$start] ??= $override ?? $this->pricing->rateFor($start);
+            $prices[$start] ??= $override ?? $this->pricing->rateFor($start, $category);
         }
 
         return $prices;
@@ -942,7 +946,7 @@ class SlotGeneratorService
      * @param  array{times: list<array{start: string, end: string}>, days: int, ...}  $plan
      * @return array<string, mixed>
      */
-    private function pricing(array $plan, ?float $override): array
+    private function pricing(array $plan, ?float $override, string $category): array
     {
         $days = $plan['days'];
 
@@ -955,7 +959,7 @@ class SlotGeneratorService
 
         foreach ($plan['times'] as $time) {
             $tier = $this->pricing->tierFor($time['start']);
-            $price = $override ?? $this->pricing->rateFor($time['start']);
+            $price = $override ?? $this->pricing->rateFor($time['start'], $category);
 
             $tiers[$tier]['count']++;
             $tiers[$tier]['rate'] = $price;
@@ -979,9 +983,12 @@ class SlotGeneratorService
         }
 
         return [
-            // 'override' — one flat price; 'global' — driven by the rate table.
-            'source' => $override !== null ? 'override' : 'global',
+            // 'override' — one flat price; 'category' — driven by the rate table
+            // row this court's category sits on.
+            'source' => $override !== null ? 'override' : 'category',
             'override' => $override,
+            'category' => $category,
+            'category_label' => Court::labelForCategory($category),
             'breakdown' => $breakdown,
         ];
     }

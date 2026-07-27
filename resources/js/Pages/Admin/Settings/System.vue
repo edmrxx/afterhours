@@ -22,6 +22,10 @@ import { usePermissions } from '@/Composables/usePermissions';
 
 const props = defineProps({
     settings: { type: Object, required: true },
+    // One entry per court category, each naming the two form fields its row
+    // renders. Supplied by the server so this screen never hard-codes a
+    // category list that could drift from Court::CATEGORIES.
+    pricingCategories: { type: Array, default: () => [] },
 });
 
 const { can } = usePermissions();
@@ -32,18 +36,28 @@ const canUpdate = computed(() => can('settings.update'));
 /* Form                                                                */
 /* ------------------------------------------------------------------ */
 
-const initial = () => ({
-    booking_hold_minutes: Number(props.settings.booking_hold_minutes ?? 30),
-    booking_verification_hold_minutes: Number(props.settings.booking_verification_hold_minutes ?? 720),
-    booking_code_prefix: String(props.settings.booking_code_prefix ?? 'AH'),
-    owner_notification_email: String(props.settings.owner_notification_email ?? ''),
-    pricing_non_peak_rate: Number(props.settings.pricing_non_peak_rate ?? 450),
-    pricing_peak_rate: Number(props.settings.pricing_peak_rate ?? 500),
-    // The peak window is the only clock control — non-peak is every hour outside
-    // it, so there is no non-peak window to type here.
-    pricing_peak_start: String(props.settings.pricing_peak_start ?? '16:00'),
-    pricing_peak_end: String(props.settings.pricing_peak_end ?? '02:00'),
-});
+const initial = () => {
+    const values = {
+        booking_hold_minutes: Number(props.settings.booking_hold_minutes ?? 30),
+        booking_verification_hold_minutes: Number(props.settings.booking_verification_hold_minutes ?? 720),
+        booking_code_prefix: String(props.settings.booking_code_prefix ?? 'AH'),
+        owner_notification_email: String(props.settings.owner_notification_email ?? ''),
+        // The peak window is the only clock control, and every category shares
+        // it — non-peak is every hour outside it, so there is no non-peak
+        // window to type here.
+        pricing_peak_start: String(props.settings.pricing_peak_start ?? '17:00'),
+        pricing_peak_end: String(props.settings.pricing_peak_end ?? '00:00'),
+    };
+
+    // One money field per (category, tier) cell. The field NAMES come from the
+    // server, so the form can never post a key the validator is not expecting.
+    for (const category of props.pricingCategories) {
+        values[category.non_peak_field] = Number(props.settings[category.non_peak_field] ?? 0);
+        values[category.peak_field] = Number(props.settings[category.peak_field] ?? 0);
+    }
+
+    return values;
+};
 
 const form = useForm(initial());
 
@@ -120,8 +134,20 @@ function to12h(hhmm) {
     return `${hour}:${String(m).padStart(2, '0')} ${suffix}`;
 }
 
-const nonPeakRate = computed(() => Math.max(0, Number(form.pricing_non_peak_rate) || 0));
-const peakRate = computed(() => Math.max(0, Number(form.pricing_peak_rate) || 0));
+/**
+ * The rate grid as the form and the live preview both read it: one row per
+ * court category, each carrying its field names and its two current values.
+ */
+const rateRows = computed(() =>
+    props.pricingCategories.map((category) => ({
+        key: category.key,
+        label: category.label,
+        nonPeakField: category.non_peak_field,
+        peakField: category.peak_field,
+        nonPeak: Math.max(0, Number(form[category.non_peak_field]) || 0),
+        peak: Math.max(0, Number(form[category.peak_field]) || 0),
+    })),
+);
 
 // Non-peak is every hour outside peak, so its window is peak's exact complement.
 const nonPeakWindow = computed(
@@ -131,12 +157,21 @@ const peakWindow = computed(
     () => `${to12h(form.pricing_peak_start)} – ${to12h(form.pricing_peak_end)}`,
 );
 
-/** A window whose start is later in the day than its end runs past midnight. */
+/**
+ * A window whose start is later in the day than its end runs past midnight.
+ * "17:00" > "00:00" is true, so a 5PM–midnight evening band counts as
+ * crossing — which is exactly right: the band ends ON the midnight boundary.
+ */
 const peakCrossesMidnight = computed(
     () => String(form.pricing_peak_start ?? '') > String(form.pricing_peak_end ?? ''),
 );
 
-const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
+/** The cheapest hour on offer anywhere — what the public site advertises. */
+const fromRate = computed(() => {
+    const all = rateRows.value.flatMap((row) => [row.nonPeak, row.peak]);
+
+    return all.length ? Math.min(...all) : 0;
+});
 </script>
 
 <template>
@@ -235,10 +270,12 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
 
                     <Card
                         title="Court pricing"
-                        subtitle="One rate table for every court. Set the peak window and both rates — every hour outside peak is charged the non-peak rate."
+                        subtitle="Each court type charges its own rates. Set the peak window once — it applies to every type — then the two rates each type charges."
                     >
                         <div class="space-y-6">
-                            <!-- Peak — the single window that decides the tier -->
+                            <!-- The single window every category shares. It sorts
+                                 an hour into a tier; the rates below decide what
+                                 that tier costs on each kind of court. -->
                             <div class="rounded-xl border border-ink-200 p-4">
                                 <div class="mb-4 flex items-center gap-2">
                                     <span
@@ -247,24 +284,16 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
                                     >
                                         <Moon :size="15" />
                                     </span>
-                                    <p class="text-sm font-semibold text-ink-800">Peak hours</p>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold text-ink-800">Peak window</p>
+                                        <p class="text-xs text-ink-500">Shared by every court type</p>
+                                    </div>
                                 </div>
 
-                                <div class="grid gap-5 sm:grid-cols-3">
-                                    <FormInput
-                                        v-model="form.pricing_peak_rate"
-                                        label="Rate"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        prefix="₱"
-                                        :disabled="!canUpdate"
-                                        :icon="Coins"
-                                        :error="form.errors.pricing_peak_rate"
-                                    />
+                                <div class="grid gap-5 sm:grid-cols-2">
                                     <FormInput
                                         v-model="form.pricing_peak_start"
-                                        label="From"
+                                        label="Peak starts"
                                         type="time"
                                         :disabled="!canUpdate"
                                         :icon="Clock"
@@ -272,7 +301,7 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
                                     />
                                     <FormInput
                                         v-model="form.pricing_peak_end"
-                                        label="To"
+                                        label="Peak ends"
                                         type="time"
                                         :disabled="!canUpdate"
                                         :icon="Clock"
@@ -280,57 +309,77 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
                                     />
                                 </div>
 
+                                <p class="mt-3 inline-flex items-center gap-1.5 text-xs text-ink-500">
+                                    <Sun :size="13" aria-hidden="true" />
+                                    Non-peak is every hour outside that · {{ nonPeakWindow }}
+                                </p>
+
                                 <p
                                     v-if="peakCrossesMidnight"
-                                    class="mt-3 inline-flex items-center gap-1.5 text-xs text-ink-500"
+                                    class="mt-2 inline-flex items-center gap-1.5 text-xs text-ink-500"
                                 >
                                     <Moon :size="13" aria-hidden="true" />
-                                    This window runs past midnight into the next day — that's allowed.
+                                    This window runs to or past midnight — that's allowed.
                                 </p>
                             </div>
 
-                            <!-- Non-peak — the rate for every other hour -->
-                            <div class="rounded-xl border border-ink-200 p-4">
+                            <!-- One block per court category. Rendered from the
+                                 server's list, so a new category appears here
+                                 without this template being touched. -->
+                            <div
+                                v-for="row in rateRows"
+                                :key="row.key"
+                                class="rounded-xl border border-ink-200 p-4"
+                            >
                                 <div class="mb-4 flex items-center gap-2">
                                     <span
                                         class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-graphite-50 text-graphite-600"
                                         aria-hidden="true"
                                     >
-                                        <Sun :size="15" />
+                                        <Coins :size="15" />
                                     </span>
-                                    <p class="text-sm font-semibold text-ink-800">Non-peak hours</p>
+                                    <p class="text-sm font-semibold text-ink-800">{{ row.label }}</p>
                                 </div>
 
                                 <div class="grid gap-5 sm:grid-cols-2">
                                     <FormInput
-                                        v-model="form.pricing_non_peak_rate"
-                                        label="Rate"
+                                        v-model="form[row.nonPeakField]"
+                                        label="Non-peak rate"
                                         type="number"
                                         min="0"
                                         step="0.01"
                                         prefix="₱"
                                         :disabled="!canUpdate"
-                                        :icon="Coins"
-                                        :error="form.errors.pricing_non_peak_rate"
+                                        :icon="Sun"
+                                        :error="form.errors[row.nonPeakField]"
+                                        :hint="nonPeakWindow"
                                     />
-                                    <div class="min-w-0">
-                                        <p class="mb-1.5 text-sm font-medium text-ink-700">Applies to</p>
-                                        <p
-                                            class="inline-flex items-center gap-1.5 rounded-lg bg-ink-50 px-3 py-2 text-sm text-ink-600"
-                                        >
-                                            <Clock :size="14" class="shrink-0 text-ink-400" aria-hidden="true" />
-                                            Every hour outside peak · {{ nonPeakWindow }}
-                                        </p>
-                                    </div>
+                                    <FormInput
+                                        v-model="form[row.peakField]"
+                                        label="Peak rate"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        prefix="₱"
+                                        :disabled="!canUpdate"
+                                        :icon="Moon"
+                                        :error="form.errors[row.peakField]"
+                                        :hint="peakWindow"
+                                    />
                                 </div>
                             </div>
+
+                            <p class="text-xs text-ink-500">
+                                Which rates a court charges is set on the court itself — Courts › Edit ›
+                                Court type. Adding another court of an existing type needs no change here.
+                            </p>
                         </div>
                     </Card>
 
                     <Alert
                         variant="info"
                         title="Saving new pricing updates the whole schedule"
-                        message="Changing either rate — or moving the peak window, which re-sorts hours between peak and non-peak — immediately reprices every available slot on every court, from today onward, so the public booking site always matches. Slots already on hold or booked keep the price the customer agreed to, and past dates are never touched. Hold times and the code prefix still apply to new bookings only."
+                        message="Changing any rate — or moving the peak window, which re-sorts hours between peak and non-peak — immediately reprices every available slot on every court, from today onward, each court at its own type's rates, so the public booking site always matches. Slots already on hold or booked keep the price the customer agreed to, and past dates are never touched. Hold times and the code prefix still apply to new bookings only."
                     />
 
                     <!-- Sticky save bar -->
@@ -461,43 +510,50 @@ const fromRate = computed(() => Math.min(nonPeakRate.value, peakRate.value));
                     </Card>
 
                     <Card class="mt-6" padding="none" title="Pricing" subtitle="What customers pay">
-                        <div class="space-y-3 p-4">
-                            <div class="flex items-center justify-between gap-3">
-                                <span class="inline-flex items-center gap-2 text-sm text-ink-700">
-                                    <span
-                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-graphite-50 text-graphite-600"
-                                        aria-hidden="true"
-                                    >
-                                        <Sun :size="15" />
-                                    </span>
-                                    Non-peak
-                                </span>
-                                <span class="text-sm font-semibold text-ink-900">{{ peso.format(nonPeakRate) }}</span>
-                            </div>
-                            <p class="pl-9 text-xs text-ink-500">{{ nonPeakWindow }}</p>
+                        <div class="divide-y divide-ink-100">
+                            <!-- One block per court type, so the two rate rows
+                                 read as the published rate card does. -->
+                            <div v-for="row in rateRows" :key="row.key" class="space-y-3 p-4">
+                                <p class="text-sm font-semibold text-ink-800">{{ row.label }}</p>
 
-                            <div class="mt-3 flex items-center justify-between gap-3">
-                                <span class="inline-flex items-center gap-2 text-sm text-ink-700">
-                                    <span
-                                        class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-noir-100 text-noir-700"
-                                        aria-hidden="true"
-                                    >
-                                        <Moon :size="15" />
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="inline-flex items-center gap-2 text-sm text-ink-700">
+                                        <span
+                                            class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-graphite-50 text-graphite-600"
+                                            aria-hidden="true"
+                                        >
+                                            <Sun :size="15" />
+                                        </span>
+                                        Non-peak
                                     </span>
-                                    Peak
-                                </span>
-                                <span class="text-sm font-semibold text-ink-900">{{ peso.format(peakRate) }}</span>
+                                    <span class="text-sm font-semibold text-ink-900">{{ peso.format(row.nonPeak) }}</span>
+                                </div>
+                                <p class="pl-9 text-xs text-ink-500">{{ nonPeakWindow }}</p>
+
+                                <div class="flex items-center justify-between gap-3">
+                                    <span class="inline-flex items-center gap-2 text-sm text-ink-700">
+                                        <span
+                                            class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-noir-100 text-noir-700"
+                                            aria-hidden="true"
+                                        >
+                                            <Moon :size="15" />
+                                        </span>
+                                        Peak
+                                    </span>
+                                    <span class="text-sm font-semibold text-ink-900">{{ peso.format(row.peak) }}</span>
+                                </div>
+                                <p class="pl-9 text-xs text-ink-500">{{ peakWindow }}</p>
                             </div>
-                            <p class="pl-9 text-xs text-ink-500">{{ peakWindow }}</p>
                         </div>
 
                         <template #footer>
                             <p class="flex items-start gap-2 text-xs text-ink-500">
                                 <Info :size="14" class="mt-0.5 shrink-0" aria-hidden="true" />
                                 <span
-                                    >The public site shows this as
+                                    >The public site shows
                                     <span class="font-semibold text-ink-700">From {{ peso.format(fromRate) }}</span
-                                    >, the cheaper of the two tiers.</span
+                                    >, the cheapest hour on offer. Each court's own card shows the cheapest
+                                    rate for its type.</span
                                 >
                             </p>
                         </template>

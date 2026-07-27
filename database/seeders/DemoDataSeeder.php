@@ -35,30 +35,36 @@ class DemoDataSeeder extends Seeder
      * carry no rate of their own — every slot is priced by the global non-peak
      * / peak table, exactly as a real generator run would resolve it.
      *
-     * @var list<array{name: string, code: string, sort: int, description: string}>
+     * @var list<array{name: string, code: string, category: string, sort: int, description: string}>
      */
     private const COURTS = [
         [
             'name' => 'Center Court',
             'code' => 'AH-C1',
+            'category' => Court::CATEGORY_NORMAL,
             'sort' => 1,
             'description' => 'Championship indoor court with tournament-grade acrylic surface, LED lighting and covered spectator seating.',
         ],
         [
             'name' => 'Rizal Court',
             'code' => 'AH-C2',
+            'category' => Court::CATEGORY_NORMAL,
             'sort' => 2,
             'description' => 'Indoor court with cushioned flooring and air-conditioned rest area. Ideal for league night doubles.',
         ],
         [
             'name' => 'Bonifacio Court',
             'code' => 'AH-C3',
+            'category' => Court::CATEGORY_NORMAL,
             'sort' => 3,
             'description' => 'Semi-covered court with natural ventilation. The regulars\' favourite for early morning games.',
         ],
         [
             'name' => 'Sampaguita Court',
             'code' => 'AH-C4',
+            // Deliberately the odd one out, so demo data exercises BOTH rate
+            // rows rather than pricing every court off the same one.
+            'category' => Court::CATEGORY_SKINNY,
             'sort' => 4,
             'description' => 'Outdoor court under shade netting. Best value for casual play and beginner clinics.',
         ],
@@ -89,6 +95,7 @@ class DemoDataSeeder extends Seeder
 
             $court->fill([
                 'name' => $spec['name'],
+                'category' => $spec['category'],
                 'description' => $spec['description'],
                 'is_active' => true,
                 'sort_order' => $spec['sort'],
@@ -128,8 +135,8 @@ class DemoDataSeeder extends Seeder
             for ($date = $start->copy(); $date->lessThanOrEqualTo($end); $date->addDay()) {
                 // Weekends carry a modest surcharge — makes the revenue report
                 // show variation instead of a flat line. The time-of-day pricing
-                // itself comes from the global non-peak/peak table, exactly as a
-                // real generator run would resolve it.
+                // itself comes from this court's CATEGORY row of the non-peak /
+                // peak table, exactly as a real generator run would resolve it.
                 $weekendPremium = $date->isWeekend() ? 50.00 : 0.00;
 
                 for ($hour = self::OPEN_HOUR; $hour < self::CLOSE_HOUR; $hour++) {
@@ -140,7 +147,7 @@ class DemoDataSeeder extends Seeder
                         'slot_date' => $date->toDateString(),
                         'start_time' => $startTime,
                         'end_time' => sprintf('%02d:00:00', $hour + 1),
-                        'price' => round($pricing->rateFor($startTime) + $weekendPremium, 2),
+                        'price' => round($pricing->rateFor($startTime, $court->categoryKey()) + $weekendPremium, 2),
                         'status' => CourtSlot::STATUS_AVAILABLE,
                         'held_booking_id' => null,
                         'created_at' => $now,

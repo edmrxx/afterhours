@@ -34,12 +34,18 @@ return [
     | Court pricing
     |--------------------------------------------------------------------------
     |
-    | Pricing is a single, club-wide (global) rate table — every court charges
-    | the same, so it lives here and in Admin > Settings > Booking rather than on
-    | the court. There are exactly two tiers: non-peak and peak. Each tier owns a
-    | rate and a clock window, and a window may legitimately cross midnight — the
-    | default peak run of 4:00 PM to 2:00 AM is the whole reason PricingService
-    | resolves the tier with wrap-around rather than a plain start < end compare.
+    | Rates are a grid: one row per court CATEGORY (see App\Models\Court::
+    | CATEGORIES), one column per time tier. A full-size court and the Skinny
+    | Court charge very different money, so the category decides the row; the
+    | shared peak window decides the column.
+    |
+    | The peak window is the only clock setting — a slot starting inside it is
+    | peak, every other hour is non-peak — and it may legitimately cross
+    | midnight, which is why PricingService resolves the tier with wrap-around
+    | rather than a plain start < end compare. The shipped default runs 5:00 PM
+    | to midnight, matching the club's published rate card; a club that trades
+    | past midnight simply moves `peak_end` later (e.g. 02:00) and the wrap
+    | handling covers it with no code change.
     |
     | A saved row in the `system` settings group overrides any of these without
     | touching `.env`; these values are only the shipped default for a fresh
@@ -48,14 +54,23 @@ return [
     */
 
     'pricing' => [
-        'non_peak_rate' => (float) env('BOOKING_NON_PEAK_RATE', 450),
-        'peak_rate' => (float) env('BOOKING_PEAK_RATE', 500),
+        // Keyed by Court::CATEGORIES. A category with no entry here prices at
+        // zero rather than throwing, so a half-finished config is visible on
+        // the settings screen instead of fatal on the booking page.
+        'categories' => [
+            'normal' => [
+                'non_peak_rate' => (float) env('BOOKING_NORMAL_NON_PEAK_RATE', 550),
+                'peak_rate' => (float) env('BOOKING_NORMAL_PEAK_RATE', 650),
+            ],
+            'skinny' => [
+                'non_peak_rate' => (float) env('BOOKING_SKINNY_NON_PEAK_RATE', 200),
+                'peak_rate' => (float) env('BOOKING_SKINNY_PEAK_RATE', 300),
+            ],
+        ],
 
-        // The peak window is the only clock setting: a slot inside it is peak,
-        // every other hour is non-peak. 24-hour "HH:MM"; the default 4pm–2am
-        // wraps past midnight, which PricingService resolves.
-        'peak_start' => env('BOOKING_PEAK_START', '16:00'),
-        'peak_end' => env('BOOKING_PEAK_END', '02:00'),
+        // 24-hour "HH:MM". 17:00 → 00:00 is the published 5PM–12MN evening band.
+        'peak_start' => env('BOOKING_PEAK_START', '17:00'),
+        'peak_end' => env('BOOKING_PEAK_END', '00:00'),
     ],
 
     /*

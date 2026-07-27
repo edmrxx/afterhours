@@ -18,11 +18,40 @@ class Court extends Model
 
     protected static string $auditModule = 'Courts';
 
+    /* ------------------------------------------------------------------ */
+    /* Categories                                                          */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * What a court costs is decided by its category, not by the court itself:
+     * the full-size courts all charge one rate pair and the Skinny Court
+     * another, so the rate table in settings is keyed by these values (see
+     * App\Services\PricingService). Adding a third full-size court is therefore
+     * a court record, not a pricing change.
+     */
+    public const CATEGORY_NORMAL = 'normal';
+
+    public const CATEGORY_SKINNY = 'skinny';
+
+    /**
+     * Every category, in display order, mapped to the label the admin and the
+     * public site show. The single source of truth: the migration default, the
+     * form dropdown, the settings rate table and the request validation all
+     * read this rather than repeating the strings.
+     *
+     * @var array<string, string>
+     */
+    public const CATEGORIES = [
+        self::CATEGORY_NORMAL => 'Normal Court',
+        self::CATEGORY_SKINNY => 'Skinny Court',
+    ];
+
     /** @var list<string> */
     protected $fillable = [
         'name',
         'slug',
         'code',
+        'category',
         'description',
         'photo_path',
         'is_active',
@@ -36,6 +65,43 @@ class Court extends Model
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];
+    }
+
+    /**
+     * The court's category, guaranteed to be one this build knows about.
+     *
+     * Never trusts the column blindly: a row written before the category
+     * existed, or one left behind by a rolled-back deploy, would otherwise
+     * resolve to no rate at all. Anything unrecognised reads as a normal
+     * court — the safe default, since that is the more expensive tier and an
+     * operator noticing "this is priced too high" is a far better failure than
+     * silently selling a full-size court at Skinny Court money.
+     *
+     * @return 'normal'|'skinny'
+     */
+    public function categoryKey(): string
+    {
+        $value = (string) $this->getAttribute('category');
+
+        return array_key_exists($value, self::CATEGORIES) ? $value : self::CATEGORY_NORMAL;
+    }
+
+    /** The human label for this court's category, e.g. "Skinny Court". */
+    public function categoryLabel(): string
+    {
+        return self::CATEGORIES[$this->categoryKey()];
+    }
+
+    /** The label for any category key, falling back to the normal one. */
+    public static function labelForCategory(?string $category): string
+    {
+        return self::CATEGORIES[$category] ?? self::CATEGORIES[self::CATEGORY_NORMAL];
+    }
+
+    /** @return list<string> */
+    public static function categoryKeys(): array
+    {
+        return array_keys(self::CATEGORIES);
     }
 
     /* ------------------------------------------------------------------ */
