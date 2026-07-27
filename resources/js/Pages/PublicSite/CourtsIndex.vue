@@ -74,10 +74,6 @@ const money = (value) => peso.format(Number(value ?? 0));
 
 /* ── Hero stats ─────────────────────────────────────────────────────── */
 
-const openCourtsCount = computed(
-    () => props.courts.filter((court) => (court.available_slots_count ?? 0) > 0).length,
-);
-
 const totalOpenSlots = computed(() =>
     props.courts.reduce((sum, court) => sum + (court.available_slots_count ?? 0), 0),
 );
@@ -545,24 +541,18 @@ function submitLookup() {
                     </a>
                 </div>
 
-                <dl
-                    class="mt-10 grid max-w-lg grid-cols-2 gap-x-8 gap-y-4 border-t border-white/15 pt-6 sm:grid-cols-3"
-                >
-                    <div>
-                        <dt class="text-xs text-white/55">Courts</dt>
-                        <dd class="mt-0.5 text-lg font-semibold text-white">{{ courts.length }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs text-white/55">Taking bookings</dt>
-                        <dd class="mt-0.5 text-lg font-semibold text-white">{{ openCourtsCount }}</dd>
-                    </div>
-                    <div v-if="company.phone" class="col-span-2 sm:col-span-1">
-                        <dt class="text-xs text-white/55">Need help?</dt>
-                        <dd class="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-white">
-                            <Phone :size="14" aria-hidden="true" />
-                            {{ company.phone }}
-                        </dd>
-                    </div>
+                <!-- The "Courts" and "Taking bookings" counters that used to sit
+                     here were dropped at the client's request. The contact line is
+                     all that remains, and the whole block is conditional on it:
+                     without the v-if the divider rule would float above an empty
+                     row whenever no phone number is set (which is the state a
+                     fresh install ships in). -->
+                <dl v-if="company.phone" class="mt-10 max-w-lg border-t border-white/15 pt-6">
+                    <dt class="text-xs text-white/55">Need help?</dt>
+                    <dd class="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-white">
+                        <Phone :size="14" aria-hidden="true" />
+                        {{ company.phone }}
+                    </dd>
                 </dl>
             </div>
         </section>
