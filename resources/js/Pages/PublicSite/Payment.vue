@@ -291,8 +291,13 @@ const wizardSteps = [
 const CTA_BASE =
     'inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-card transition-colors duration-200 ease-[var(--ease-out-soft)] hover:shadow-card-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-900 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55';
 
-/** Primary action: noir fill, white text (21:1); the graphite hover holds 9.0:1. */
-const primaryCta = `${CTA_BASE} bg-brand-600 text-white hover:bg-brand-500`;
+/**
+ * The submit action: noir fill, white text (21:1), the noir-800 hover holding
+ * 16.6:1. Deliberately black rather than the app-wide crimson primary — the
+ * client asked for it on this step, and it matches the Button component's
+ * `dark` variant so the two stay the same black rather than drifting apart.
+ */
+const darkCta = `${CTA_BASE} bg-noir-900 text-white hover:bg-noir-800 active:bg-noir-700`;
 
 /** Secondary action: ash fill with NOIR text — white on ash-500 is ~1.9:1 and
  *  fails WCAG, so the ash surface always carries noir lettering. */
@@ -387,9 +392,16 @@ const ashCta = `${CTA_BASE} bg-ash-500 text-noir-900 hover:bg-ash-600`;
                     <section
                         class="overflow-hidden rounded-xl border border-bone-300/70 bg-white shadow-card"
                     >
-                        <!-- SCAN TO PAY hero -->
+                        <!-- SCAN TO PAY hero.
+                             The same noir-corner-into-crimson wash the hold
+                             banner above uses (HOLD_WRAPPER.calm) and the
+                             hero/footer/lookup bands elsewhere — one brand
+                             surface, not a second dark one competing with it.
+                             Deliberately no inset ring: this sits flush at the
+                             top of a bordered white card, which already draws
+                             the edge the banner has to draw for itself. -->
                         <div
-                            class="bg-gradient-to-br from-noir-900 to-graphite-700 px-5 py-7 text-center sm:px-8 sm:py-9"
+                            class="bg-brand-600 bg-gradient-to-br from-noir-900/35 via-brand-600 to-brand-600 px-5 py-7 text-center sm:px-8 sm:py-9"
                         >
                             <!-- Dark surface: the white wordmark, sitting bare. -->
                             <img
@@ -693,7 +705,7 @@ const ashCta = `${CTA_BASE} bg-ash-500 text-noir-900 hover:bg-ash-600`;
 
                             <button
                                 type="submit"
-                                :class="[primaryCta, 'mt-6 w-full']"
+                                :class="[darkCta, 'mt-6 w-full']"
                                 :disabled="expired || form.processing"
                             >
                                 <LoaderCircle

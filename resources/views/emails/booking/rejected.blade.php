@@ -44,9 +44,13 @@ We couldn&rsquo;t verify the payment for booking {{ $summary['code'] }}.
     @include('emails.partials.summary', ['summary' => $summary, 'showPayment' => true])
 
     @if ($rebookUrl)
+        {{-- Noir, like every other CUSTOMER-facing CTA (reserved, confirmed).
+             The two staff emails keep the crimson button on purpose: it is the
+             one visual cue that separates an internal tool link from the
+             actions a customer is asked to take. --}}
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px;">
             <tr>
-                <td style="background-color:#781714; border-radius:10px;">
+                <td style="background-color:#000000; border-radius:10px;">
                     <a href="{{ $rebookUrl }}" target="_blank" rel="noopener"
                        style="display:inline-block; padding:13px 26px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:14px; line-height:20px; font-weight:600; color:#ffffff; text-decoration:none;">
                         Book another slot

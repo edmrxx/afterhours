@@ -6,15 +6,16 @@
     Colours are the client's brand palette written as literal hex, because
     email needs literal hex — this is the one place hardcoding is correct:
 
-        Crimson     #781714    primary buttons and CTAs (white text, 11.0:1)
-        Noir        #000000    header band and dark surfaces (white text, 21:1)
+        Crimson     #781714    the brand bar and CTAs (white text, 11.0:1)
+        Crimson dk  #4e0f0d    the brand bar's gradient corner only
+        Noir        #000000    the primary button and dark surfaces (white, 21:1)
         Graphite    #48494B    links, secondary accents (white text, 9.0:1)
         Ash         #b0b1b4    kickers and rules (never carries white text)
         Bone 300    #e4e4e6    hairline borders
         Bone 100    #f6f6f7    page and footer background
 
-    The header is a noir background COLOUR, not an image, so when a client
-    blocks images the header still reads as a branded black band with the
+    The header is a crimson background COLOUR, not an image, so when a client
+    blocks images the header still reads as a branded crimson band with the
     logo's alt text in it.
 --}}
 @php
@@ -70,11 +71,20 @@
 
             <table role="presentation" class="ah-shell" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background-color:#ffffff; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(9,9,11,0.10);">
 
-                {{-- Brand bar: noir background COLOUR carries the brand even with
-                     images blocked; the white-on-dark wordmark sits bare on it,
-                     which is the surface that artwork is drawn for. --}}
+                {{-- Brand bar: a crimson background COLOUR carries the brand even
+                     with images blocked; the white-on-dark wordmark sits bare on
+                     it, which is the surface that artwork is drawn for.
+
+                     The gradient is the same noir-corner-into-crimson wash the
+                     checkout's "Scan to pay" panel uses. `background-color` is
+                     the load-bearing declaration and `background-image` is pure
+                     enhancement: Outlook drops CSS gradients entirely and shows
+                     flat #781714, which is the dominant colour of the wash
+                     anyway — so the fallback is the design, not a compromise.
+                     #4e0f0d is noir at 35% composited over the crimson, the
+                     literal result of the web build's from-noir-900/35. --}}
                 <tr>
-                    <td style="background-color:#000000; padding:26px 36px;">
+                    <td style="background-color:#781714; background-image:linear-gradient(135deg, #4e0f0d 0%, #781714 50%, #781714 100%); padding:26px 36px;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                             <tr>
                                 <td align="left" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:17px; line-height:26px; font-weight:700; color:#f6f6f7; letter-spacing:-0.2px;">

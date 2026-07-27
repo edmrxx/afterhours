@@ -64,9 +64,14 @@ We're holding {{ $summary['court_name'] }} on {{ $summary['date'] }}, {{ $summar
     </table>
 
     @if ($paymentUrl)
+        {{-- Noir, not the crimson every other email CTA uses: the brand bar at
+             the top of this message is now crimson, and the page this button
+             lands on opens with a crimson "Scan to pay" panel whose own submit
+             button is black for the same reason. Black keeps the one action
+             that matters distinct from the band above it. --}}
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
             <tr>
-                <td style="background-color:#781714; border-radius:10px;">
+                <td style="background-color:#000000; border-radius:10px;">
                     <a href="{{ $paymentUrl }}" target="_blank" rel="noopener"
                        style="display:inline-block; padding:13px 26px; font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:14px; line-height:20px; font-weight:600; color:#ffffff; text-decoration:none;">
                         Pay now
