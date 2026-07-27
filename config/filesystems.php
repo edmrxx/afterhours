@@ -45,7 +45,18 @@ return [
             // support) — point this straight at the live public/storage
             // folder so uploads land somewhere Apache actually serves.
             'root' => env('PUBLIC_STORAGE_PATH', storage_path('app/public')),
-            'url' => env('APP_URL').'/storage',
+            // Root-relative on purpose. This used to be env('APP_URL').'/storage',
+            // which silently breaks every uploaded image the moment APP_URL and
+            // the address actually being browsed disagree — running
+            // `artisan serve` on a different port than APP_URL names is enough,
+            // and the only symptom is a broken image with no error anywhere.
+            //
+            // Every consumer of this URL is a web page rendering an <img> on the
+            // same host (payment QRs, court photos, avatars, the company logo),
+            // so a relative path resolves correctly whatever host, port or
+            // scheme the page was served from. Set PUBLIC_STORAGE_URL to an
+            // absolute base only if these ever move to a separate CDN host.
+            'url' => env('PUBLIC_STORAGE_URL', '/storage'),
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
