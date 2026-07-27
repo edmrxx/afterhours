@@ -110,11 +110,13 @@ time and never rewritten) and read via `Booking::slots()`. Every legacy
 single-court read keeps using `court_id` / `court_slot_id` unchanged, and a
 booking that happens to span one court renders identically to before.
 
-`payment_method` records which app the reference came from (`gcash` | `gotyme`,
-per `Booking::PAYMENT_METHODS`) so a verifying admin knows which ledger to open.
-It is nullable because every booking taken before the choice existed has no
-answer, as does one paid over the phone on a site that publishes no method at
-all — render that as an em dash, never as `gcash`.
+`payment_method` records which app or bank the reference came from (`bdo` |
+`gotyme` | `gcash`, per `Booking::PAYMENT_METHODS`) so a verifying admin knows
+which ledger to open. It is nullable because every booking taken before the
+choice existed has no answer, as does one paid over the phone on a site that
+publishes no method at all — render that as an em dash, never as a guess. It is
+a plain string, not an enum, precisely so "the client also wants Maya" stays a
+catalogue entry rather than a migration on a live table.
 
 Checkout therefore demands a method **only when it published one to choose**:
 `SubmitPaymentRequest` and the checkout page both read the published set from
@@ -131,19 +133,29 @@ Generic and extensible: `group` (`payment` | `company` | `theme` | `system`),
 `unique(group, key)`. Read through a cached repository, never raw queries in
 controllers. Payment settings ship now; company/theme use the same table.
 
-Payment keys: `gcash_qr_path`, `gcash_account_name`, `gcash_account_number`,
-`gotyme_qr_path`, `gotyme_account_name`, `gotyme_account_number`,
-`payment_instructions`.
+Payment keys are three per method — `{prefix}_qr_path`, `{prefix}_account_name`,
+`{prefix}_account_number` for each of `bdo`, `gotyme` and `gcash` — plus the
+shared `payment_instructions`.
 
-Checkout offers one QR per configured method. GCash is **required** — it is the
-live method and must never become unconfigurable. The three `gotyme_*` keys are
-**optional**: leave them empty and the funnel behaves exactly as it did when
-GCash was the only choice. A method is only offered once it has a QR or an
-account number, so a half-filled one never renders an empty card.
-`payment_instructions` is shared by both. GoTyme is a bank, not a wallet, so
-`gotyme_account_number` is digits only (6–20) and is never validated against the
-`09XXXXXXXXX` mobile-number rule that `gcash_account_number` carries. Whichever
-method the customer picks is stored on `bookings.payment_method`.
+`PaymentMethodService::CATALOGUE` is the single source for all of it: the
+settings screen renders a card per entry, `UpdatePaymentSettingsRequest` builds
+its rules from it, `PaymentSettingsController` derives its QR slots and storage
+types from it, and `PaymentSettingsSeeder` creates its keys from it. Adding a
+fourth method is one entry there plus a constant on `Booking` — not a hunt
+through five files that each kept their own copy.
+
+**BDO is required** — it is the account the club banks into and must never
+become unconfigurable. GoTyme and GCash are **optional** as a whole but
+all-or-nothing within themselves (`required_with` pairs the name and number), so
+leaving one blank simply means checkout never offers it. A method is only
+offered once it has a QR or an account number, so a half-filled one never
+renders an empty card.
+
+The catalogue's `number_format` is the real distinction between them: BDO and
+GoTyme are banks whose account numbers are digits only (6–20), while GCash is a
+wallet keyed on a Philippine mobile number (`09XXXXXXXXX`). Neither rule is ever
+applied to the other — doing so would invite the customer to mistype either one.
+Whichever method the customer picks is stored on `bookings.payment_method`.
 
 ---
 

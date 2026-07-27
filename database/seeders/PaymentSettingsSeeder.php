@@ -19,17 +19,25 @@ class PaymentSettingsSeeder extends Seeder
      */
     private const DEFAULTS = [
         Setting::GROUP_PAYMENT => [
-            // Uploaded through the payment settings screen; empty until then.
-            'gcash_qr_path' => ['image', null],
-            'gcash_account_name' => ['string', ''],
-            'gcash_account_number' => ['string', ''],
+            // BDO is the account the club banks into and the one its printed
+            // rate card sends customers to, so it leads the checkout and is the
+            // one method the settings screen refuses to leave blank. Uploaded
+            // and filled in through that screen; empty until then.
+            'bdo_qr_path' => ['image', null],
+            'bdo_account_name' => ['string', ''],
+            'bdo_account_number' => ['string', ''],
 
-            // GoTyme is the optional second method. Seeded blank on purpose:
-            // the keys must exist so the settings screen renders empty fields,
-            // but an unconfigured GoTyme is a valid — and the default — state.
+            // GoTyme and GCash are optional second and third methods. Seeded
+            // blank on purpose: the keys must exist so the settings screen
+            // renders empty fields, but an unconfigured method is a valid — and
+            // the default — state, and checkout simply never offers it.
             'gotyme_qr_path' => ['image', null],
             'gotyme_account_name' => ['string', ''],
             'gotyme_account_number' => ['string', ''],
+
+            'gcash_qr_path' => ['image', null],
+            'gcash_account_name' => ['string', ''],
+            'gcash_account_number' => ['string', ''],
 
             // One instruction block covers both methods, so the wording stays
             // method-neutral — naming GCash here would be wrong the moment a

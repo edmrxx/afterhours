@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\UpdatePaymentSettingsRequest;
 use App\Models\Setting;
 use App\Services\AuditTrailService;
+use App\Services\PaymentMethodService;
 use App\Services\SettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
@@ -17,37 +18,20 @@ use Inertia\Response;
 /**
  * Payment settings — the values the public checkout renders.
  *
- * Two methods share this screen: GCash, which is required because it is the
- * live method today, and GoTyme, which is entirely optional. Everything here
- * goes through {@see SettingsService}; the `settings` table is never touched
- * directly. The QR images themselves live on the `public` disk and only their
- * relative paths are stored, so moving domains or swapping disks does not
+ * Every method on this screen comes from {@see PaymentMethodService::CATALOGUE}:
+ * its QR slot, its storage types and the card the page renders are all derived
+ * from that one list, so adding a method there needs no change here. The
+ * catalogue's `required` method must stay configured; the rest are optional.
+ *
+ * Everything goes through {@see SettingsService}; the `settings` table is never
+ * touched directly. The QR images themselves live on the `public` disk and only
+ * their relative paths are stored, so moving domains or swapping disks does not
  * invalidate the row.
  */
 class PaymentSettingsController extends Controller
 {
     /** Where uploaded QR images land on the `public` disk. */
     private const QR_DIRECTORY = 'settings/payment';
-
-    /**
-     * The two QR slots: upload field => [settings key, label for error copy].
-     * Both flow through the same code path so neither can drift.
-     */
-    private const QR_FIELDS = [
-        'gcash_qr' => ['gcash_qr_path', 'GCash'],
-        'gotyme_qr' => ['gotyme_qr_path', 'GoTyme'],
-    ];
-
-    /** Declared storage type per key — never inferred, so a null stays an image. */
-    private const TYPES = [
-        'gcash_qr_path' => 'image',
-        'gcash_account_name' => 'string',
-        'gcash_account_number' => 'string',
-        'gotyme_qr_path' => 'image',
-        'gotyme_account_name' => 'string',
-        'gotyme_account_number' => 'string',
-        'payment_instructions' => 'text',
-    ];
 
     public function __construct(
         private readonly SettingsService $settings,
@@ -58,7 +42,45 @@ class PaymentSettingsController extends Controller
     {
         return Inertia::render('Admin/Settings/Payment', [
             'settings' => $this->present(),
+            // The screen renders one card per entry rather than hard-coding a
+            // section per method, so this is the whole contract it needs.
+            'methods' => $this->methodProps(),
         ]);
+    }
+
+    /**
+     * The catalogue in the shape the settings form consumes: field names it
+     * binds to, the copy its card shows, and whether it may be left blank.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function methodProps(): array
+    {
+        $methods = [];
+
+        foreach (PaymentMethodService::CATALOGUE as $method) {
+            $prefix = $method['prefix'];
+            $isMobile = $method['number_format'] === PaymentMethodService::NUMBER_MOBILE;
+
+            $methods[] = [
+                'key' => $method['key'],
+                'label' => $method['label'],
+                'prefix' => $prefix,
+                'required' => $method['required'],
+                'number_label' => $method['number_label'],
+                'number_format' => $method['number_format'],
+                'number_placeholder' => $isMobile ? '0917 123 4567' : '1234 5678 90',
+                'name_hint' => $isMobile
+                    ? sprintf('Must match the name registered to the %s wallet.', $method['label'])
+                    : sprintf('Must match the name on the %s bank account.', $method['label']),
+                'number_hint' => $isMobile
+                    ? 'Philippine mobile number. +63 and 63 prefixes are accepted and normalised.'
+                    : sprintf('%s is a bank, not a wallet — this is the account number, 6 to 20 digits, never a mobile number.', $method['label']),
+                'qr_hint' => sprintf('Export the QR straight from the %s app so the code stays crisp. Minimum 200 x 200 pixels.', $method['label']),
+            ];
+        }
+
+        return $methods;
     }
 
     public function update(UpdatePaymentSettingsRequest $request): RedirectResponse
@@ -73,7 +95,11 @@ class PaymentSettingsController extends Controller
         $resolved = [];
         $uploaded = [];
 
-        foreach (self::QR_FIELDS as $field => [$key, $label]) {
+        foreach (PaymentMethodService::CATALOGUE as $method) {
+            $field = $method['prefix'].'_qr';
+            $key = $method['prefix'].'_qr_path';
+            $label = $method['label'];
+
             $previous[$key] = $this->pathOf($before[$key] ?? null);
 
             if ($request->hasFile($field)) {
@@ -96,17 +122,17 @@ class PaymentSettingsController extends Controller
             $resolved[$key] = $request->boolean('remove_'.$field) ? null : $previous[$key];
         }
 
-        $after = [
-            'gcash_account_name' => (string) $request->input('gcash_account_name', ''),
-            'gcash_account_number' => (string) $request->input('gcash_account_number', ''),
-            'gotyme_account_name' => (string) $request->input('gotyme_account_name', ''),
-            'gotyme_account_number' => (string) $request->input('gotyme_account_number', ''),
-            'payment_instructions' => (string) $request->input('payment_instructions', ''),
-            'gcash_qr_path' => $resolved['gcash_qr_path'],
-            'gotyme_qr_path' => $resolved['gotyme_qr_path'],
-        ];
+        $after = ['payment_instructions' => (string) $request->input('payment_instructions', '')];
 
-        $this->settings->setMany(Setting::GROUP_PAYMENT, $after, self::TYPES);
+        foreach (PaymentMethodService::CATALOGUE as $method) {
+            $prefix = $method['prefix'];
+
+            $after[$prefix.'_account_name'] = (string) $request->input($prefix.'_account_name', '');
+            $after[$prefix.'_account_number'] = (string) $request->input($prefix.'_account_number', '');
+            $after[$prefix.'_qr_path'] = $resolved[$prefix.'_qr_path'];
+        }
+
+        $this->settings->setMany(Setting::GROUP_PAYMENT, $after, PaymentMethodService::settingTypes());
 
         // Only bin the old images once the new paths are committed — a failed
         // write must never leave the checkout pointing at a deleted file. The
@@ -141,7 +167,7 @@ class PaymentSettingsController extends Controller
 
         $out = [];
 
-        foreach (array_keys(self::TYPES) as $key) {
+        foreach (array_keys(PaymentMethodService::settingTypes()) as $key) {
             $value = $group[$key] ?? null;
             $out[$key] = is_scalar($value) ? (string) $value : null;
         }
@@ -158,20 +184,20 @@ class PaymentSettingsController extends Controller
     private function present(): array
     {
         $stored = $this->stored();
-        $gcashQr = $this->pathOf($stored['gcash_qr_path'] ?? null);
-        $gotymeQr = $this->pathOf($stored['gotyme_qr_path'] ?? null);
 
-        return [
-            'gcash_account_name' => $stored['gcash_account_name'] ?? '',
-            'gcash_account_number' => $stored['gcash_account_number'] ?? '',
-            'gcash_qr_path' => $gcashQr,
-            'gcash_qr_url' => $this->urlOf($gcashQr),
-            'gotyme_account_name' => $stored['gotyme_account_name'] ?? '',
-            'gotyme_account_number' => $stored['gotyme_account_number'] ?? '',
-            'gotyme_qr_path' => $gotymeQr,
-            'gotyme_qr_url' => $this->urlOf($gotymeQr),
-            'payment_instructions' => $stored['payment_instructions'] ?? '',
-        ];
+        $props = ['payment_instructions' => $stored['payment_instructions'] ?? ''];
+
+        foreach (PaymentMethodService::CATALOGUE as $method) {
+            $prefix = $method['prefix'];
+            $qr = $this->pathOf($stored[$prefix.'_qr_path'] ?? null);
+
+            $props[$prefix.'_account_name'] = $stored[$prefix.'_account_name'] ?? '';
+            $props[$prefix.'_account_number'] = $stored[$prefix.'_account_number'] ?? '';
+            $props[$prefix.'_qr_path'] = $qr;
+            $props[$prefix.'_qr_url'] = $this->urlOf($qr);
+        }
+
+        return $props;
     }
 
     /**

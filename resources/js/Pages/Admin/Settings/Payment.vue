@@ -30,10 +30,17 @@ import { usePermissions } from '@/Composables/usePermissions';
 /*
 | Payment settings.
 |
-| Checkout offers two ways to pay. GCash is mandatory — it is the live method
-| and must never become unconfigurable. GoTyme is a second QR the customer may
-| scan instead, and it is entirely optional: a site that leaves every GoTyme
-| field blank behaves exactly as it did before the method existed.
+| Every card on this screen is rendered from the `methods` prop, which is
+| PaymentMethodService::CATALOGUE — the same list the checkout, the validator
+| and the seeder read. Adding a method there makes its card appear here with no
+| change to this file, which is the point: the previous version hard-coded a
+| section per method and a third one would have meant a third copy of the same
+| ~90 lines.
+|
+| Exactly one method is flagged `required` (BDO — the account the club banks
+| into); it must never become unconfigurable. Every other method is optional as
+| a whole but all-or-nothing within itself, so a site that leaves one blank
+| behaves exactly as if it never existed.
 |
 | The right-hand column renders the customer-facing panel from the *live form
 | state*, so the admin sees the exact QRs, numbers and copy a customer will get
@@ -42,6 +49,11 @@ import { usePermissions } from '@/Composables/usePermissions';
 
 const props = defineProps({
     settings: { type: Object, required: true },
+    /**
+     * [{ key, label, prefix, required, number_label, number_format,
+     *    number_placeholder, name_hint, number_hint, qr_hint }]
+     */
+    methods: { type: Array, default: () => [] },
 });
 
 const { can } = usePermissions();
@@ -53,18 +65,21 @@ const canUpdate = computed(() => can('settings.update'));
 /* ------------------------------------------------------------------ */
 
 /** `_method` spoofs PUT so the multipart upload can go out as a POST. */
-const initial = () => ({
-    _method: 'put',
-    gcash_account_name: props.settings.gcash_account_name ?? '',
-    gcash_account_number: props.settings.gcash_account_number ?? '',
-    gotyme_account_name: props.settings.gotyme_account_name ?? '',
-    gotyme_account_number: props.settings.gotyme_account_number ?? '',
-    payment_instructions: props.settings.payment_instructions ?? '',
-    gcash_qr: null,
-    remove_gcash_qr: false,
-    gotyme_qr: null,
-    remove_gotyme_qr: false,
-});
+const initial = () => {
+    const fields = {
+        _method: 'put',
+        payment_instructions: props.settings.payment_instructions ?? '',
+    };
+
+    for (const method of props.methods) {
+        fields[`${method.prefix}_account_name`] = props.settings[`${method.prefix}_account_name`] ?? '';
+        fields[`${method.prefix}_account_number`] = props.settings[`${method.prefix}_account_number`] ?? '';
+        fields[`${method.prefix}_qr`] = null;
+        fields[`remove_${method.prefix}_qr`] = false;
+    }
+
+    return fields;
+};
 
 const form = useForm(initial());
 
@@ -76,11 +91,18 @@ function submit() {
     }
 
     form
-        .transform((data) => ({
-            ...data,
-            remove_gcash_qr: data.remove_gcash_qr ? 1 : 0,
-            remove_gotyme_qr: data.remove_gotyme_qr ? 1 : 0,
-        }))
+        .transform((data) => {
+            // Multipart carries no booleans — a raw `false` would arrive as the
+            // string "false", which is truthy on the server.
+            const payload = { ...data };
+
+            for (const method of props.methods) {
+                const key = `remove_${method.prefix}_qr`;
+                payload[key] = data[key] ? 1 : 0;
+            }
+
+            return payload;
+        })
         .post(route('admin.settings.payment.update'), {
             forceFormData: true,
             preserveScroll: true,
@@ -157,27 +179,27 @@ function qrSlot(prefix) {
     };
 }
 
-// Destructured flat so the template reads the computeds directly — refs nested
-// inside a plain object are not unwrapped by the template compiler.
-const {
-    revoke: revokeGcashQr,
-    url: gcashQrUrl,
-    hasStored: hasStoredGcashQr,
-    remove: removeGcashQr,
-    keep: keepGcashQr,
-} = qrSlot('gcash');
+/*
+| One slot per method, keyed by prefix. Built once at setup — qrSlot() registers
+| a watcher, so it must never run inside a computed or a render.
+|
+| The template reaches these through the accessor functions below rather than
+| the map directly: refs nested inside a plain object are NOT unwrapped by the
+| template compiler, so `slots[prefix].url` would render "[object Object]".
+*/
+const qrSlots = Object.fromEntries(
+    props.methods.map((method) => [method.prefix, qrSlot(method.prefix)]),
+);
 
-const {
-    revoke: revokeGotymeQr,
-    url: gotymeQrUrl,
-    hasStored: hasStoredGotymeQr,
-    remove: removeGotymeQr,
-    keep: keepGotymeQr,
-} = qrSlot('gotyme');
+const qrUrlFor = (prefix) => qrSlots[prefix]?.url.value ?? null;
+const hasStoredQr = (prefix) => qrSlots[prefix]?.hasStored.value ?? false;
+const removeQr = (prefix) => qrSlots[prefix]?.remove();
+const keepQr = (prefix) => qrSlots[prefix]?.keep();
 
 onBeforeUnmount(() => {
-    revokeGcashQr();
-    revokeGotymeQr();
+    for (const slot of Object.values(qrSlots)) {
+        slot.revoke();
+    }
 });
 
 /*
@@ -203,22 +225,29 @@ const peso = new Intl.NumberFormat('en-PH', {
 const SAMPLE_AMOUNT = 450;
 
 /** 09171234567 → 0917 123 4567, which is how customers read it back. */
-const gcashPrettyNumber = computed(() => {
-    const digits = String(form.gcash_account_number ?? '').replace(/\D+/g, '');
+function prettyMobile(value) {
+    const digits = String(value ?? '').replace(/\D+/g, '');
 
     if (digits.length !== 11) {
-        return form.gcash_account_number || '—';
+        return value || '—';
     }
 
     return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-});
+}
+
+const numberOf = (method) => form[`${method.prefix}_account_number`];
+const nameOf = (method) => form[`${method.prefix}_account_name`];
 
 /*
-| GoTyme is a digital bank, not a wallet: its account number is not a
-| Philippine mobile number, so the 0917 123 4567 grouping above would
-| misrepresent it and invite the customer to mistype it. It renders verbatim.
+| A bank account number renders verbatim: BDO and GoTyme are banks, not
+| wallets, so the 0917 123 4567 grouping above would misrepresent the number
+| and invite the customer to mistype it. Only a mobile-keyed wallet is grouped.
 */
-const gotymeDisplayNumber = computed(() => form.gotyme_account_number || '—');
+function displayNumber(method) {
+    return method.number_format === 'mobile'
+        ? prettyMobile(numberOf(method))
+        : numberOf(method) || '—';
+}
 
 /** Instruction copy split into steps, with any "1." prefix stripped. */
 const instructionLines = computed(() =>
@@ -238,36 +267,29 @@ const instructionLines = computed(() =>
 | placeholders spell out what is still missing.
 */
 const previewMethods = computed(() => {
-    const gcash = {
-        key: 'gcash',
-        label: 'GCash',
-        icon: Wallet,
-        qrUrl: gcashQrUrl.value,
-        accountName: form.gcash_account_name || '—',
-        accountNumber: gcashPrettyNumber.value,
-        accountNumberLabel: 'GCash number',
-        scanHint: 'Scan with the GCash app, or send to the account below.',
-        published: Boolean(gcashQrUrl.value || form.gcash_account_number),
-    };
+    const cards = props.methods.map((method) => ({
+        key: method.key,
+        // A wallet gets the wallet glyph, a bank the bank one — the icon is a
+        // property of what the method IS, not of which one it happens to be.
+        icon: method.number_format === 'mobile' ? Wallet : Landmark,
+        label: method.label,
+        qrUrl: qrUrlFor(method.prefix),
+        accountName: nameOf(method) || '—',
+        accountNumber: displayNumber(method),
+        accountNumberLabel: method.number_label,
+        scanHint: `Scan with the ${method.label} app, or send to the account below.`,
+        published: Boolean(qrUrlFor(method.prefix) || numberOf(method)),
+    }));
 
-    const gotyme = {
-        key: 'gotyme',
-        label: 'GoTyme',
-        icon: Landmark,
-        qrUrl: gotymeQrUrl.value,
-        accountName: form.gotyme_account_name || '—',
-        accountNumber: gotymeDisplayNumber.value,
-        accountNumberLabel: 'Account number',
-        scanHint: 'Scan with the GoTyme app, or send to the account below.',
-        published: Boolean(gotymeQrUrl.value || form.gotyme_account_number),
-    };
+    const published = cards.filter((card) => card.published);
 
-    const published = [gcash, gotyme].filter((method) => method.published);
-
-    return published.length > 0 ? published : [gcash];
+    // Nothing configured at all would leave the panel with nothing to teach, so
+    // it falls back to the first card, whose placeholders spell out what is
+    // still missing.
+    return published.length > 0 ? published : cards.slice(0, 1);
 });
 
-const previewMethodKey = ref('gcash');
+const previewMethodKey = ref(props.methods[0]?.key ?? null);
 
 /*
 | Falling back to the first entry instead of watching the list keeps the panel
@@ -280,72 +302,91 @@ const activeMethod = computed(
         previewMethods.value[0],
 );
 
-const gcashComplete = computed(
-    () =>
-        Boolean(gcashQrUrl.value) &&
-        Boolean(form.gcash_account_name) &&
-        /^09\d{9}$/.test(String(form.gcash_account_number ?? '').replace(/\D+/g, '')),
-);
+const NUMBER_PATTERNS = { bank: /^\d{6,20}$/, mobile: /^09\d{9}$/ };
 
-/** Touching any GoTyme field is a commitment to finish the method. */
-const gotymeStarted = computed(() =>
-    Boolean(gotymeQrUrl.value || form.gotyme_account_name || form.gotyme_account_number),
-);
+const numberValid = (method) =>
+    (NUMBER_PATTERNS[method.number_format] ?? NUMBER_PATTERNS.bank).test(
+        String(numberOf(method) ?? '').replace(/\D+/g, ''),
+    );
+
+/** Touching any field of an optional method is a commitment to finish it. */
+const started = (method) =>
+    Boolean(qrUrlFor(method.prefix) || nameOf(method) || numberOf(method));
 
 /*
-| Deliberately NOT "all three fields filled". Two independent rules decide
-| whether a GoTyme section is finished, and this has to agree with both or the
-| footer contradicts what the admin will actually get:
+| Deliberately NOT "all three fields filled". This has to agree with the server
+| or the footer contradicts what the admin will actually get:
 |
-|   - the checkout publishes a method that carries a QR *or* an account number
-|     (PublicBookingController::paymentMethods()), so a QR-only GoTyme is a
-|     complete, publishable method — telling the admin to add account details
-|     they do not have would be wrong;
-|   - the server pairs the name and number with required_with, so either both
-|     travel or neither does.
-|
-| `previewMethods` above already applies the first rule; this keeps the footer
-| from calling the same configuration broken.
+|   - checkout publishes a method carrying a QR *or* an account number
+|     (PaymentMethodService::published()), so a QR-only optional method is
+|     complete and publishable — telling the admin to add account details they
+|     do not have would be wrong;
+|   - the server pairs name and number with required_with, so either both
+|     travel or neither does;
+|   - the REQUIRED method is different: the server demands its name and number
+|     outright, and its QR is nullable. So a required method with a valid
+|     number and no QR genuinely is complete — the customer can still send to
+|     the account.
 */
-const gotymeComplete = computed(() => {
-    const hasName = Boolean(form.gotyme_account_name);
-    const hasNumber = Boolean(form.gotyme_account_number);
+function complete(method) {
+    const hasName = Boolean(nameOf(method));
+    const hasNumber = Boolean(numberOf(method));
+
+    if (method.required) {
+        return hasName && hasNumber && numberValid(method);
+    }
 
     // required_with cuts both ways — neither field may be published alone.
     if (hasName !== hasNumber) {
         return false;
     }
 
-    if (hasNumber && !/^\d{6,20}$/.test(String(form.gotyme_account_number ?? '').replace(/\D+/g, ''))) {
+    if (hasNumber && !numberValid(method)) {
         return false;
     }
 
     // Something the customer can act on: a QR to scan or a number to send to.
-    return Boolean(gotymeQrUrl.value) || hasNumber;
-});
+    return Boolean(qrUrlFor(method.prefix)) || hasNumber;
+}
+
+/** Optional methods the admin has begun but not finished — the blockers. */
+const halfFinished = computed(() =>
+    props.methods.filter((method) => !method.required && started(method) && !complete(method)),
+);
+
+const requiredMethods = computed(() => props.methods.filter((method) => method.required));
+
+const requiredIncomplete = computed(() =>
+    requiredMethods.value.filter((method) => !complete(method)),
+);
 
 /*
-| "Fully configured" still means a customer can finish paying: GCash whole,
-| instructions written, and GoTyme either untouched or finished. A stray GoTyme
-| account name with no number behind it would fail the save outright.
+| "Fully configured" means a customer can finish paying: every required method
+| whole, instructions written, and every optional method either untouched or
+| finished. A stray account name with no number behind it would fail the save
+| outright, so it counts as not ready.
 */
 const previewReady = computed(
     () =>
-        gcashComplete.value &&
+        requiredIncomplete.value.length === 0 &&
         instructionLines.value.length > 0 &&
-        (!gotymeStarted.value || gotymeComplete.value),
+        halfFinished.value.length === 0,
 );
 
 /** Name the half-finished method rather than sending the admin hunting. */
 const previewMessage = computed(() => {
     if (previewReady.value) {
-        return gotymeStarted.value
-            ? 'Checkout is fully configured — customers can pay with GCash or GoTyme.'
+        const live = previewMethods.value.filter((card) => card.published).map((card) => card.label);
+
+        return live.length > 1
+            ? `Checkout is fully configured — customers can pay with ${live.slice(0, -1).join(', ')} or ${live.at(-1)}.`
             : 'Checkout is fully configured.';
     }
 
-    if (gcashComplete.value && instructionLines.value.length > 0) {
-        return 'GoTyme is half-finished — it needs a QR, or an account name and number together. Clear every GoTyme field to publish GCash only.';
+    if (requiredIncomplete.value.length === 0 && instructionLines.value.length > 0) {
+        const names = halfFinished.value.map((method) => method.label).join(' and ');
+
+        return `${names} is half-finished — it needs a QR, or an account name and number together. Clear every ${names} field to leave it switched off.`;
     }
 
     return 'Add a QR, account details and instructions to complete checkout.';
@@ -381,181 +422,127 @@ const previewMessage = computed(() => {
                         message="You can review the payment configuration but not change it. Ask an administrator for the settings.update permission."
                     />
 
-                    <Card
-                        title="GCash QR code"
-                        subtitle="Scanned by the customer to pay. PNG, JPG or WebP, up to 2MB."
-                    >
-                        <template #actions>
-                            <Badge tone="brand" size="xs" :dot="false" label="Required" />
-                        </template>
-
-                        <FormFileUpload
-                            v-model="form.gcash_qr"
-                            label="QR image"
-                            accept="image/png,image/jpeg,image/webp"
-                            :max-size="2"
-                            :square="true"
-                            :disabled="!canUpdate"
-                            :existing-url="form.remove_gcash_qr ? null : settings.gcash_qr_url"
-                            :progress="uploadProgress(form.gcash_qr)"
-                            :error="form.errors.gcash_qr"
-                            hint="Export the QR straight from the GCash app so the code stays crisp. Minimum 200 x 200 pixels."
-                        />
-
-                        <div
-                            v-if="canUpdate && (hasStoredGcashQr || form.remove_gcash_qr)"
-                            class="mt-4 flex flex-wrap items-center gap-3"
-                        >
-                            <Button
-                                v-if="!form.remove_gcash_qr && !form.gcash_qr"
-                                variant="ghost"
-                                size="sm"
-                                @click="removeGcashQr"
-                            >
-                                <template #icon><Trash2 :size="14" /></template>
-                                Remove current QR
-                            </Button>
-
-                            <template v-if="form.remove_gcash_qr">
-                                <span class="text-xs font-medium text-danger-600">
-                                    The stored QR will be deleted when you save.
-                                </span>
-                                <Button variant="ghost" size="sm" @click="keepGcashQr">
-                                    <template #icon><RotateCcw :size="14" /></template>
-                                    Keep it
-                                </Button>
-                            </template>
-                        </div>
-                    </Card>
-
-                    <Card
-                        title="GCash receiving account"
-                        subtitle="Shown beside the QR for customers who prefer to send manually."
-                    >
-                        <template #actions>
-                            <Badge tone="brand" size="xs" :dot="false" label="Required" />
-                        </template>
-
-                        <div class="grid gap-5 sm:grid-cols-2">
-                            <FormInput
-                                v-model="form.gcash_account_name"
-                                label="Account name"
-                                placeholder="Juan Dela Cruz"
-                                required
-                                :disabled="!canUpdate"
-                                :icon="Wallet"
-                                :error="form.errors.gcash_account_name"
-                                hint="Must match the name registered to the GCash wallet."
-                            />
-
-                            <FormInput
-                                v-model="form.gcash_account_number"
-                                label="GCash number"
-                                placeholder="0917 123 4567"
-                                inputmode="tel"
-                                autocomplete="off"
-                                required
-                                :disabled="!canUpdate"
-                                :error="form.errors.gcash_account_number"
-                                hint="Philippine mobile number. +63 and 63 prefixes are accepted and normalised."
-                            />
-                        </div>
-                    </Card>
-
                     <!--
-                        Spelled out because the account fields validate as a
-                        pair: an admin who types a GoTyme account name and
-                        nothing else would otherwise be baffled by an error on a
-                        field they believed was optional.
+                        One QR card + one account card per method, rendered from
+                        the catalogue. Spelling out that the optional methods
+                        validate as a PAIR matters: an admin who types an account
+                        name and nothing else would otherwise be baffled by an
+                        error on a field the badge calls optional.
                     -->
-                    <Alert variant="brand" title="GoTyme is optional">
-                        Leave the two cards below completely empty and checkout keeps offering
-                        GCash only, exactly as it does today. Start filling them in and they
-                        become a set: the account name and number are required together, and the
-                        preview calls checkout complete once GoTyme has a QR, or an account name
-                        and number together.
-                    </Alert>
-
-                    <Card
-                        title="GoTyme QR code"
-                        subtitle="A second QR the customer can scan instead. PNG, JPG or WebP, up to 2MB."
-                    >
-                        <template #actions>
-                            <Badge tone="ink" size="xs" :dot="false" label="Optional" />
-                        </template>
-
-                        <FormFileUpload
-                            v-model="form.gotyme_qr"
-                            label="QR image"
-                            accept="image/png,image/jpeg,image/webp"
-                            :max-size="2"
-                            :square="true"
-                            :disabled="!canUpdate"
-                            :existing-url="form.remove_gotyme_qr ? null : settings.gotyme_qr_url"
-                            :progress="uploadProgress(form.gotyme_qr)"
-                            :error="form.errors.gotyme_qr"
-                            hint="Export the QR straight from the GoTyme app. Leave this empty to keep GCash as the only method."
-                        />
-
-                        <div
-                            v-if="canUpdate && (hasStoredGotymeQr || form.remove_gotyme_qr)"
-                            class="mt-4 flex flex-wrap items-center gap-3"
+                    <template v-for="method in methods" :key="method.prefix">
+                        <Card
+                            :title="`${method.label} QR code`"
+                            subtitle="Scanned by the customer to pay. PNG, JPG or WebP, up to 2MB."
                         >
-                            <Button
-                                v-if="!form.remove_gotyme_qr && !form.gotyme_qr"
-                                variant="ghost"
-                                size="sm"
-                                @click="removeGotymeQr"
-                            >
-                                <template #icon><Trash2 :size="14" /></template>
-                                Remove current QR
-                            </Button>
-
-                            <template v-if="form.remove_gotyme_qr">
-                                <span class="text-xs font-medium text-danger-600">
-                                    The stored QR will be deleted when you save.
-                                </span>
-                                <Button variant="ghost" size="sm" @click="keepGotymeQr">
-                                    <template #icon><RotateCcw :size="14" /></template>
-                                    Keep it
-                                </Button>
+                            <template #actions>
+                                <Badge
+                                    :tone="method.required ? 'brand' : 'ink'"
+                                    size="xs"
+                                    :dot="false"
+                                    :label="method.required ? 'Required' : 'Optional'"
+                                />
                             </template>
-                        </div>
-                    </Card>
 
-                    <Card
-                        title="GoTyme receiving account"
-                        subtitle="Shown beside the GoTyme QR. Only needed if you publish GoTyme."
-                    >
-                        <template #actions>
-                            <Badge tone="ink" size="xs" :dot="false" label="Optional" />
-                        </template>
-
-                        <div class="grid gap-5 sm:grid-cols-2">
-                            <FormInput
-                                v-model="form.gotyme_account_name"
-                                label="Account name"
-                                label-hint="Optional"
-                                placeholder="Juan Dela Cruz"
+                            <FormFileUpload
+                                v-model="form[`${method.prefix}_qr`]"
+                                label="QR image"
+                                accept="image/png,image/jpeg,image/webp"
+                                :max-size="2"
+                                :square="true"
                                 :disabled="!canUpdate"
-                                :icon="Landmark"
-                                :error="form.errors.gotyme_account_name"
-                                hint="Must match the name on the GoTyme bank account."
+                                :existing-url="
+                                    form[`remove_${method.prefix}_qr`]
+                                        ? null
+                                        : settings[`${method.prefix}_qr_url`]
+                                "
+                                :progress="uploadProgress(form[`${method.prefix}_qr`])"
+                                :error="form.errors[`${method.prefix}_qr`]"
+                                :hint="method.qr_hint"
                             />
 
-                            <FormInput
-                                v-model="form.gotyme_account_number"
-                                label="Account number"
-                                label-hint="Optional"
-                                placeholder="1234567890"
-                                inputmode="numeric"
-                                autocomplete="off"
-                                :disabled="!canUpdate"
-                                :error="form.errors.gotyme_account_number"
-                                hint="GoTyme is a bank, not a wallet — this is the account number, 6 to 20 digits, never a mobile number."
-                            />
-                        </div>
-                    </Card>
+                            <div
+                                v-if="
+                                    canUpdate &&
+                                    (hasStoredQr(method.prefix) || form[`remove_${method.prefix}_qr`])
+                                "
+                                class="mt-4 flex flex-wrap items-center gap-3"
+                            >
+                                <Button
+                                    v-if="
+                                        !form[`remove_${method.prefix}_qr`] &&
+                                        !form[`${method.prefix}_qr`]
+                                    "
+                                    variant="ghost"
+                                    size="sm"
+                                    @click="removeQr(method.prefix)"
+                                >
+                                    <template #icon><Trash2 :size="14" /></template>
+                                    Remove current QR
+                                </Button>
+
+                                <template v-if="form[`remove_${method.prefix}_qr`]">
+                                    <span class="text-xs font-medium text-danger-600">
+                                        The stored QR will be deleted when you save.
+                                    </span>
+                                    <Button variant="ghost" size="sm" @click="keepQr(method.prefix)">
+                                        <template #icon><RotateCcw :size="14" /></template>
+                                        Keep it
+                                    </Button>
+                                </template>
+                            </div>
+                        </Card>
+
+                        <Card
+                            :title="`${method.label} receiving account`"
+                            :subtitle="
+                                method.required
+                                    ? 'Shown beside the QR for customers who prefer to send manually.'
+                                    : `Shown beside the ${method.label} QR. Only needed if you publish ${method.label}.`
+                            "
+                        >
+                            <template #actions>
+                                <Badge
+                                    :tone="method.required ? 'brand' : 'ink'"
+                                    size="xs"
+                                    :dot="false"
+                                    :label="method.required ? 'Required' : 'Optional'"
+                                />
+                            </template>
+
+                            <p v-if="!method.required" class="mb-4 text-xs text-ink-500">
+                                Leave both fields and the QR above empty and checkout simply never
+                                offers {{ method.label }}. Start filling them in and they become a
+                                set — the account name and number are required together.
+                            </p>
+
+                            <div class="grid gap-5 sm:grid-cols-2">
+                                <FormInput
+                                    v-model="form[`${method.prefix}_account_name`]"
+                                    label="Account name"
+                                    :label-hint="method.required ? null : 'Optional'"
+                                    placeholder="Juan Dela Cruz"
+                                    :required="method.required"
+                                    :disabled="!canUpdate"
+                                    :icon="method.number_format === 'mobile' ? Wallet : Landmark"
+                                    :error="form.errors[`${method.prefix}_account_name`]"
+                                    :hint="method.name_hint"
+                                />
+
+                                <FormInput
+                                    v-model="form[`${method.prefix}_account_number`]"
+                                    :label="method.number_label"
+                                    :label-hint="method.required ? null : 'Optional'"
+                                    :placeholder="method.number_placeholder"
+                                    :inputmode="method.number_format === 'mobile' ? 'tel' : 'numeric'"
+                                    autocomplete="off"
+                                    :required="method.required"
+                                    :disabled="!canUpdate"
+                                    :error="form.errors[`${method.prefix}_account_number`]"
+                                    :hint="method.number_hint"
+                                />
+                            </div>
+                        </Card>
+                    </template>
 
                     <Card
                         title="Payment instructions"

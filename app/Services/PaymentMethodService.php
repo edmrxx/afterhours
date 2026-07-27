@@ -32,29 +32,104 @@ use Illuminate\Support\Facades\Storage;
  */
 class PaymentMethodService
 {
+    /** An account number shaped like a bank's — digits, never a phone number. */
+    public const NUMBER_BANK = 'bank';
+
+    /** A wallet keyed on a Philippine mobile number. */
+    public const NUMBER_MOBILE = 'mobile';
+
     /**
-     * Settings prefix, display label and number label per method.
+     * Every method the system knows how to publish.
      *
-     * Order is deliberate and not alphabetical: GCash is the method the site
-     * has run on since launch and the one most guests reach for, and the
-     * contract fixes it as the first entry of the checkout payload.
+     * This is THE list. The settings screen renders a card per entry, the
+     * validator builds its rules from it, the controller derives its QR slots
+     * and storage types from it, and the seeder creates its keys from it — so
+     * adding a fourth method is one entry here plus a constant on Booking,
+     * not a hunt through five files that each kept their own copy.
      *
-     * GoTyme is a bank, not a wallet — its account number is not a mobile
-     * number, so it gets the neutral field label.
+     * Order is deliberate and not alphabetical: it is the order checkout
+     * renders, and BDO leads because it is the account the club banks into.
      *
-     * @var list<array{0: string, 1: string, 2: string, 3: string}>
+     * `required` marks the method that must stay configured — without one, an
+     * admin could save a checkout with nowhere to send money. Only BDO carries
+     * it; the rest are opt-in and all-or-nothing within themselves.
+     *
+     * `number_format` is the real distinction between these: BDO and GoTyme are
+     * banks whose account numbers are digits, GCash is a wallet keyed on a
+     * Philippine mobile number. Validating them alike would invite a customer
+     * to mistype either one.
+     *
+     * @var list<array{
+     *     key: string, label: string, prefix: string,
+     *     number_label: string, number_format: string, required: bool,
+     * }>
      */
-    private const CATALOGUE = [
-        [Booking::PAYMENT_METHOD_GCASH, 'GCash', 'gcash', 'GCash number'],
-        [Booking::PAYMENT_METHOD_GOTYME, 'GoTyme', 'gotyme', 'Account number'],
+    public const CATALOGUE = [
+        [
+            'key' => Booking::PAYMENT_METHOD_BDO,
+            'label' => 'BDO',
+            'prefix' => 'bdo',
+            'number_label' => 'Account number',
+            'number_format' => self::NUMBER_BANK,
+            'required' => true,
+        ],
+        [
+            'key' => Booking::PAYMENT_METHOD_GOTYME,
+            'label' => 'GoTyme',
+            'prefix' => 'gotyme',
+            'number_label' => 'Account number',
+            'number_format' => self::NUMBER_BANK,
+            'required' => false,
+        ],
+        [
+            'key' => Booking::PAYMENT_METHOD_GCASH,
+            'label' => 'GCash',
+            'prefix' => 'gcash',
+            'number_label' => 'GCash number',
+            'number_format' => self::NUMBER_MOBILE,
+            'required' => false,
+        ],
     ];
+
+    /**
+     * Every settings key the payment group owns, in catalogue order, followed
+     * by the shared instruction block.
+     *
+     * @return array<string, string>  key => storage type
+     */
+    public static function settingTypes(): array
+    {
+        $types = [];
+
+        foreach (self::CATALOGUE as $method) {
+            $types[$method['prefix'].'_qr_path'] = 'image';
+            $types[$method['prefix'].'_account_name'] = 'string';
+            $types[$method['prefix'].'_account_number'] = 'string';
+        }
+
+        $types['payment_instructions'] = 'text';
+
+        return $types;
+    }
+
+    /** The one method that may never be left unconfigured. */
+    public static function requiredMethod(): ?array
+    {
+        foreach (self::CATALOGUE as $method) {
+            if ($method['required']) {
+                return $method;
+            }
+        }
+
+        return null;
+    }
 
     public function __construct(
         private readonly SettingsService $settings,
     ) {}
 
     /**
-     * The published methods, GCash first, in the shape the checkout consumes.
+     * The published methods, in catalogue order, in the shape checkout consumes.
      *
      * May legitimately be empty — that is the fresh-install state, and it is
      * what drives the "payment details are not published yet" panel.
@@ -65,7 +140,8 @@ class PaymentMethodService
     {
         $methods = [];
 
-        foreach (self::CATALOGUE as [$key, $label, $prefix, $numberLabel]) {
+        foreach (self::CATALOGUE as $method) {
+            $prefix = $method['prefix'];
             $qrUrl = $this->publicUrl($this->stringSetting($prefix.'_qr_path'));
             $accountNumber = $this->stringSetting($prefix.'_account_number');
 
@@ -74,13 +150,13 @@ class PaymentMethodService
             }
 
             $methods[] = [
-                'key' => $key,
-                'label' => $label,
+                'key' => $method['key'],
+                'label' => $method['label'],
                 'qr_url' => $qrUrl,
                 'account_name' => $this->stringSetting($prefix.'_account_name'),
                 'account_number' => $accountNumber,
-                'account_number_label' => $numberLabel,
-                'scan_hint' => sprintf('Scan in the %s app', $label),
+                'account_number_label' => $method['number_label'],
+                'scan_hint' => sprintf('Scan in the %s app', $method['label']),
             ];
         }
 

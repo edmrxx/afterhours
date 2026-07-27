@@ -9,6 +9,7 @@ use App\Models\Court;
 use App\Models\CourtSlot;
 use App\Models\Setting;
 use App\Services\BookingService;
+use App\Services\PaymentMethodService;
 use App\Services\SettingsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -54,7 +55,7 @@ class BookingPaymentMethodTest extends TestCase
 
     public function test_the_payment_page_offers_both_methods_when_both_are_configured(): void
     {
-        $this->publishGcash();
+        $this->publishBdo();
         $this->publishGotyme();
 
         $booking = $this->reserve();
@@ -64,14 +65,35 @@ class BookingPaymentMethodTest extends TestCase
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('PublicSite/Payment')
                 ->has('payment.methods', 2)
-                // GCash first — the contract fixes the order, and the checkout
+                // BDO first — catalogue order is the contract, and the checkout
                 // pre-selects methods[0] for the single-method case.
-                ->where('payment.methods.0.key', Booking::PAYMENT_METHOD_GCASH)
-                ->where('payment.methods.0.account_number_label', 'GCash number')
+                ->where('payment.methods.0.key', Booking::PAYMENT_METHOD_BDO)
+                ->where('payment.methods.0.account_number_label', 'Account number')
+                ->where('payment.methods.0.account_number', '001234567890')
                 ->where('payment.methods.1.key', Booking::PAYMENT_METHOD_GOTYME)
-                // GoTyme is a bank: never labelled as a mobile number.
+                // Both are banks: neither is ever labelled as a mobile number.
                 ->where('payment.methods.1.account_number_label', 'Account number')
                 ->where('payment.methods.1.account_number', '0123456789')
+                ->etc()
+            );
+    }
+
+    public function test_gcash_still_publishes_and_still_reads_as_a_wallet(): void
+    {
+        // Kept as an optional third method: its card must still label the field
+        // as a mobile number, and it sorts after the two banks.
+        $this->publishBdo();
+        $this->publishGcash();
+
+        $booking = $this->reserve();
+
+        $this->get('/booking/'.$booking->code.'/payment')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->has('payment.methods', 2)
+                ->where('payment.methods.0.key', Booking::PAYMENT_METHOD_BDO)
+                ->where('payment.methods.1.key', Booking::PAYMENT_METHOD_GCASH)
+                ->where('payment.methods.1.account_number_label', 'GCash number')
                 ->etc()
             );
     }
@@ -263,6 +285,15 @@ class BookingPaymentMethodTest extends TestCase
         ]);
     }
 
+    private function publishBdo(): void
+    {
+        $this->settings([
+            'bdo_account_name' => 'The Paddle Room',
+            'bdo_account_number' => '001234567890',
+            'payment_instructions' => 'Scan the QR, send the exact amount, then type the reference here.',
+        ]);
+    }
+
     private function publishGcash(): void
     {
         $this->settings([
@@ -285,10 +316,12 @@ class BookingPaymentMethodTest extends TestCase
      */
     private function settings(array $values): void
     {
-        app(SettingsService::class)->setMany(Setting::GROUP_PAYMENT, $values, [
-            'gcash_qr_path' => 'image',
-            'gotyme_qr_path' => 'image',
-            'payment_instructions' => 'text',
-        ]);
+        // Derived, not listed: a method added to the catalogue must not need a
+        // matching line here before its settings can be written in a test.
+        app(SettingsService::class)->setMany(
+            Setting::GROUP_PAYMENT,
+            $values,
+            PaymentMethodService::settingTypes(),
+        );
     }
 }

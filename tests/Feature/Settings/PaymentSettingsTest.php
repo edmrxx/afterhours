@@ -13,12 +13,14 @@ use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
- * The payment settings screen, with GoTyme as the optional second method.
+ * The payment settings screen: BDO required, GoTyme and GCash optional.
  *
  * The rules that matter here are the ones a careless edit would quietly undo:
- * GoTyme must stay optional as a whole but all-or-nothing within itself, its
- * account number is a BANK number and must never inherit the GCash mobile
- * rule, and replacing one QR must never delete the other one's file.
+ * BDO must stay required so checkout can never be published with nowhere to
+ * send money; the optional methods must stay optional as a whole but
+ * all-or-nothing within themselves; a BANK account number must never inherit
+ * the GCash mobile rule (or the reverse); and replacing one QR must never
+ * delete another one's file.
  */
 class PaymentSettingsTest extends TestCase
 {
@@ -103,15 +105,67 @@ class PaymentSettingsTest extends TestCase
     public function test_the_gcash_number_is_still_validated_as_a_mobile_number(): void
     {
         // The same value GoTyme accepts above must fail here: GCash is a
-        // wallet keyed on a Philippine mobile number.
+        // wallet keyed on a Philippine mobile number, whichever position it
+        // holds in the catalogue.
         $this->actingAs($this->admin())
             ->put('/admin/settings/payment', $this->payload([
+                'gcash_account_name' => 'The Paddle Room',
                 'gcash_account_number' => '0123456789',
             ]))
             ->assertInvalid(['gcash_account_number']);
     }
 
-    public function test_replacing_the_gotyme_qr_deletes_the_superseded_file_and_leaves_the_gcash_qr_alone(): void
+    public function test_gcash_is_now_optional_and_a_blank_gcash_saves(): void
+    {
+        // GCash was the required method before BDO took that role. Leaving it
+        // entirely blank must now be a valid, saveable state.
+        $this->actingAs($this->admin())
+            ->put('/admin/settings/payment', $this->payload())
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        self::assertSame('', $this->setting('gcash_account_name'));
+        self::assertSame('', $this->setting('gcash_account_number'));
+    }
+
+    public function test_bdo_is_required_and_a_blank_bdo_is_rejected(): void
+    {
+        // Without a required method an admin could publish a checkout with
+        // nowhere to send money.
+        $this->actingAs($this->admin())
+            ->put('/admin/settings/payment', $this->payload([
+                'bdo_account_name' => '',
+                'bdo_account_number' => '',
+            ]))
+            ->assertInvalid(['bdo_account_name', 'bdo_account_number']);
+    }
+
+    public function test_the_bdo_number_is_validated_as_a_bank_number_not_a_mobile_one(): void
+    {
+        // A mobile number is 11 digits, so it passes the 6-20 bank rule — the
+        // guarantee that matters is the reverse: BDO must NOT be forced into
+        // the 09XXXXXXXXX shape, and a 12-digit account must be accepted.
+        $this->actingAs($this->admin())
+            ->put('/admin/settings/payment', $this->payload([
+                'bdo_account_number' => '0012 3456 7890',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        // Separators stripped, digits kept verbatim — never reshaped to 09...
+        self::assertSame('001234567890', $this->setting('bdo_account_number'));
+    }
+
+    public function test_a_bdo_number_that_is_not_digits_is_rejected(): void
+    {
+        $this->actingAs($this->admin())
+            ->put('/admin/settings/payment', $this->payload([
+                'bdo_account_number' => 'not-an-account',
+            ]))
+            ->assertInvalid(['bdo_account_number']);
+    }
+
+    public function test_replacing_the_gotyme_qr_deletes_the_superseded_file_and_leaves_the_bdo_qr_alone(): void
     {
         $gotyme = [
             'gotyme_account_name' => 'The Paddle Room Inc',
@@ -120,15 +174,15 @@ class PaymentSettingsTest extends TestCase
 
         $this->actingAs($this->admin())
             ->put('/admin/settings/payment', $this->payload($gotyme + [
-                'gcash_qr' => $this->qrImage('gcash.png'),
+                'bdo_qr' => $this->qrImage('bdo.png'),
                 'gotyme_qr' => $this->qrImage('gotyme.png'),
             ]))
             ->assertRedirect();
 
-        $gcashPath = $this->setting('gcash_qr_path');
+        $bdoPath = $this->setting('bdo_qr_path');
         $supersededPath = $this->setting('gotyme_qr_path');
 
-        self::assertNotNull($gcashPath);
+        self::assertNotNull($bdoPath);
         self::assertNotNull($supersededPath);
 
         // Second save uploads a new GoTyme QR and touches nothing else.
@@ -145,9 +199,9 @@ class PaymentSettingsTest extends TestCase
         Storage::disk('public')->assertMissing($supersededPath);
 
         // The other method's QR is neither re-pointed nor deleted — replacing
-        // one image must never take the other one's file down with it.
-        self::assertSame($gcashPath, $this->setting('gcash_qr_path'));
-        Storage::disk('public')->assertExists($gcashPath);
+        // one image must never take another one's file down with it.
+        self::assertSame($bdoPath, $this->setting('bdo_qr_path'));
+        Storage::disk('public')->assertExists($bdoPath);
     }
 
     /* --------------------------------------------------------------------- */
@@ -163,7 +217,8 @@ class PaymentSettingsTest extends TestCase
     }
 
     /**
-     * A valid save with GCash filled in and GoTyme blank — the shipped default.
+     * A valid save with BDO — the one required method — filled in, and every
+     * optional method blank. The shipped default.
      *
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
@@ -171,10 +226,12 @@ class PaymentSettingsTest extends TestCase
     private function payload(array $overrides = []): array
     {
         return array_merge([
-            'gcash_account_name' => 'The Paddle Room',
-            'gcash_account_number' => '09171234567',
+            'bdo_account_name' => 'The Paddle Room',
+            'bdo_account_number' => '001234567890',
             'gotyme_account_name' => '',
             'gotyme_account_number' => '',
+            'gcash_account_name' => '',
+            'gcash_account_number' => '',
             'payment_instructions' => 'Scan the QR, send the exact amount, then type the reference number here.',
         ], $overrides);
     }

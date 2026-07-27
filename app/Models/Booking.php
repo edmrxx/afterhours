@@ -56,19 +56,30 @@ class Booking extends Model
         self::STATUS_PENDING_VERIFICATION,
     ];
 
-    public const PAYMENT_METHOD_GCASH = 'gcash';
+    public const PAYMENT_METHOD_BDO = 'bdo';
 
     public const PAYMENT_METHOD_GOTYME = 'gotyme';
 
+    public const PAYMENT_METHOD_GCASH = 'gcash';
+
     /**
-     * The wallets checkout may offer. GCash is first because it is the method
-     * the site has always had and the one every existing booking used.
+     * The methods checkout may offer, in the order it renders them.
+     *
+     * BDO leads because it is the account the club now banks into and the one
+     * its printed rate card sends customers to; GCash trails because it is kept
+     * only for guests who still reach for it, not because it is promoted.
+     *
+     * The order here is the order of the checkout payload, and
+     * {@see \App\Services\PaymentMethodService::CATALOGUE} is what actually
+     * drives the settings screen, the validator and the seeder — this list is
+     * the model-level answer to "what may be written to payment_method".
      *
      * @var list<string>
      */
     public const PAYMENT_METHODS = [
-        self::PAYMENT_METHOD_GCASH,
+        self::PAYMENT_METHOD_BDO,
         self::PAYMENT_METHOD_GOTYME,
+        self::PAYMENT_METHOD_GCASH,
     ];
 
     /**
@@ -432,8 +443,13 @@ class Booking extends Model
     public function paymentMethodLabel(): ?string
     {
         return match ($this->payment_method) {
-            self::PAYMENT_METHOD_GCASH => 'GCash',
+            self::PAYMENT_METHOD_BDO => 'BDO',
             self::PAYMENT_METHOD_GOTYME => 'GoTyme',
+            // Still mapped even if an admin later switches GCash off: a booking
+            // paid through it keeps reading "GCash" in the audit trail rather
+            // than decaying to an em dash, which would lose the one fact staff
+            // need to find the transaction.
+            self::PAYMENT_METHOD_GCASH => 'GCash',
             default => null,
         };
     }
