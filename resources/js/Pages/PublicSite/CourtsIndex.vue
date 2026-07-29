@@ -72,12 +72,6 @@ const peso = new Intl.NumberFormat('en-PH', {
 
 const money = (value) => peso.format(Number(value ?? 0));
 
-/* ── Hero stats ─────────────────────────────────────────────────────── */
-
-const totalOpenSlots = computed(() =>
-    props.courts.reduce((sum, court) => sum + (court.available_slots_count ?? 0), 0),
-);
-
 /** Availability copy for a grid column header, so it never overstates what is left today. */
 function availability(count) {
     const n = count ?? 0;
@@ -495,19 +489,7 @@ function submitLookup() {
                     class="mb-8 h-12 w-auto sm:h-14"
                 />
 
-                <span
-                    class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold tracking-[0.2em] text-ash-400 uppercase ring-1 ring-inset ring-white/15"
-                >
-                    <span class="relative flex h-2 w-2" aria-hidden="true">
-                        <span
-                            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-ash-400 opacity-75"
-                        />
-                        <span class="relative inline-flex h-2 w-2 rounded-full bg-ash-400" />
-                    </span>
-                    {{ totalOpenSlots }} open slot{{ totalOpenSlots === 1 ? '' : 's' }} right now
-                </span>
-
-                <h1 class="font-display-heading mt-5 max-w-2xl text-4xl text-white sm:text-5xl md:text-6xl">
+                <h1 class="font-display-heading max-w-2xl text-4xl text-white sm:text-5xl md:text-6xl">
                     <span class="block">Play beyond</span>
                     <span class="block text-ash-400">the 9-to-5.</span>
                 </h1>
@@ -685,16 +667,6 @@ function submitLookup() {
                                             ]"
                                         >
                                             {{ day.month }}
-                                        </span>
-                                        <span
-                                            :class="[
-                                                'mt-1 rounded-full px-1.5 py-0.5 text-[10px] leading-none font-medium',
-                                                day.date === selectedDate
-                                                    ? 'bg-white/20 text-white'
-                                                    : 'bg-ash-100 text-ash-800',
-                                            ]"
-                                        >
-                                            {{ day.slots_count }} open
                                         </span>
                                     </button>
                                 </div>
