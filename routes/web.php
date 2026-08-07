@@ -146,10 +146,17 @@ Route::middleware(['auth', 'active', 'password.changed'])
         });
 
         /* ---------------------------------------------------------------- */
-        /* Bookings — manual GCash verification                              */
+        /* Bookings — payment verification, plus the desk's own entries      */
         /* ---------------------------------------------------------------- */
         Route::controller(BookingController::class)->prefix('bookings')->name('bookings.')->group(function () {
             Route::get('/', 'index')->middleware('permission:bookings.view')->name('index');
+
+            // Both MUST stay above `/{booking}`: bookings resolve by code, so
+            // a later /create would be swallowed as a lookup for the booking
+            // coded "create" and 404 instead of opening the form.
+            Route::get('/create', 'create')->middleware('permission:bookings.create')->name('create');
+            Route::post('/', 'store')->middleware('permission:bookings.create')->name('store');
+
             Route::get('/{booking}', 'show')->middleware('permission:bookings.view')->name('show');
             Route::post('/{booking}/confirm', 'confirm')->middleware('permission:bookings.verify')->name('confirm');
             Route::post('/{booking}/reject', 'reject')->middleware('permission:bookings.verify')->name('reject');

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Booking\RejectBookingRequest;
+use App\Http\Requests\Booking\StoreManualBookingRequest;
 use App\Models\AuditTrail;
 use App\Models\Booking;
 use App\Models\Court;
@@ -116,6 +117,7 @@ class BookingController extends Controller
             'slots.court:id,name',
             'confirmedBy:id,name,username',
             'rejectedBy:id,name,username',
+            'createdBy:id,name,username',
         ]);
 
         $this->audit->logView(
@@ -130,6 +132,62 @@ class BookingController extends Controller
             'can' => $this->abilities(),
             'serverTime' => now()->toIso8601String(),
         ]);
+    }
+
+    /* ===================================================================== */
+    /* Create — the desk keys one in                                          */
+    /* ===================================================================== */
+
+    /**
+     * The manual booking form: pick a day, pick hours off that day's grid,
+     * name the customer.
+     *
+     * Only slots that already exist can be picked. Generating inventory is the
+     * Slots screen's job and it stays there — a booking form that could
+     * conjure an hour out of nothing would let one staff member sell a court
+     * outside the club's operating hours without anyone ever deciding those
+     * hours had changed.
+     *
+     * `?date=` is unbounded on purpose, in both directions. Forward is
+     * ordinary; backward is the backfill case, where last night's walk-in
+     * finally gets written down.
+     */
+    public function create(Request $request): Response
+    {
+        Gate::authorize('create', Booking::class);
+
+        $date = $this->date($this->stringQuery($request, 'date')) ?? now()->toDateString();
+
+        return Inertia::render('Admin/Bookings/Create', [
+            'courts' => $this->bookableCourts(),
+            // One prop for everything that depends on the chosen day, so the
+            // date picker can re-request exactly this key and nothing else.
+            'schedule' => $this->schedule($date),
+            'selectedDate' => $date,
+            'today' => now()->toDateString(),
+            'modes' => $this->modeOptions(),
+        ]);
+    }
+
+    /**
+     * Write the booking.
+     *
+     * No try/catch: BookingException renders itself as a flash redirect, so a
+     * slot lost to a real customer between opening this form and submitting it
+     * comes back as a readable message on the form rather than a 500.
+     */
+    public function store(StoreManualBookingRequest $request): RedirectResponse
+    {
+        $booking = $this->bookings->reserveManually(
+            $request->slotIds(),
+            $request->customer(),
+            $this->actor($request),
+            $request->mode(),
+        );
+
+        return redirect()
+            ->route('admin.bookings.show', $booking->code)
+            ->with('success', $this->createdMessage($booking));
     }
 
     /* ===================================================================== */
@@ -173,10 +231,17 @@ class BookingController extends Controller
     /**
      * Remove a junk record.
      *
-     * A booking still sitting on its slot is cancelled through the service
-     * first — deleting the row on its own would strand the slot in `held`
-     * with a `held_booking_id` pointing at nothing, quietly taking a
-     * sellable hour off the market forever.
+     * Deleting the row on its own would strand every slot the booking holds
+     * with a `held_booking_id` pointing at nothing, quietly taking sellable
+     * hours off the market forever — invisible here, still unbookable on the
+     * public grid. Both release paths below exist to prevent that:
+     *
+     *  - a booking still on hold goes through cancel() first, so it lands in
+     *    `cancelled` with the audit entry a customer-facing booking deserves;
+     *  - releaseSlotsOnDeletion() then sweeps whatever any other status left
+     *    occupied. This is the part cancel() alone cannot cover: confirmed and
+     *    completed bookings hold their slots as `booked`, which no
+     *    status-gated release ever touches.
      */
     public function destroy(Request $request, Booking $booking): RedirectResponse
     {
@@ -188,10 +253,15 @@ class BookingController extends Controller
             $this->bookings->cancel($booking);
         }
 
+        // No-op when cancel() above already handed the slots back.
+        $freed = $this->bookings->releaseSlotsOnDeletion($booking);
+
         // The Auditable trait records the deletion.
         $booking->delete();
 
-        $message = sprintf('Booking %s deleted.', $code);
+        $message = $freed > 0
+            ? sprintf('Booking %s deleted. %d %s returned to available.', $code, $freed, Str::plural('slot', $freed))
+            : sprintf('Booking %s deleted.', $code);
 
         // Going "back" from the detail screen would land on a 404.
         return $this->cameFromDetail($booking)
@@ -213,6 +283,7 @@ class BookingController extends Controller
         $sort = $this->stringQuery($request, 'sort');
         $direction = strtolower($this->stringQuery($request, 'direction', 'desc'));
         $status = $this->stringQuery($request, 'status');
+        $source = $this->stringQuery($request, 'source');
 
         $defaultPerPage = (int) config('booking.per_page', 25);
         $perPage = (int) $this->stringQuery($request, 'per_page', (string) $defaultPerPage);
@@ -220,6 +291,8 @@ class BookingController extends Controller
         return [
             'search' => Str::limit(trim($this->stringQuery($request, 'search')), 100, ''),
             'status' => in_array($status, Booking::STATUSES, true) ? $status : '',
+            // Blank means both, which is the default: staff work one queue.
+            'source' => in_array($source, Booking::SOURCES, true) ? $source : '',
             'court_id' => (int) $this->stringQuery($request, 'court_id', '0'),
             'date_from' => $this->date($this->stringQuery($request, 'date_from')),
             'date_to' => $this->date($this->stringQuery($request, 'date_to')),
@@ -253,6 +326,7 @@ class BookingController extends Controller
         return [
             'search' => $filters['search'],
             'status' => $filters['status'],
+            'source' => $filters['source'],
             'court_id' => $filters['court_id'] > 0 ? (string) $filters['court_id'] : '',
             'date_from' => $filters['date_from'] ?? '',
             'date_to' => $filters['date_to'] ?? '',
@@ -278,6 +352,7 @@ class BookingController extends Controller
         $query = Booking::query()
             ->leftJoin('court_slots', 'court_slots.id', '=', 'bookings.court_slot_id')
             ->when($filters['search'] !== '', fn (Builder $q): Builder => $q->search($filters['search']))
+            ->when($filters['source'] !== '', fn (Builder $q): Builder => $q->source($filters['source']))
             ->when($filters['court_id'] > 0, fn (Builder $q): Builder => $q->where('bookings.court_id', $filters['court_id']))
             // Compared bare rather than through whereDate(): slot_date is a
             // DATE column, and wrapping it in DATE() would stop the
@@ -385,6 +460,178 @@ class BookingController extends Controller
     }
 
     /* ===================================================================== */
+    /* Manual booking form                                                    */
+    /* ===================================================================== */
+
+    /**
+     * The courts the form may put a booking on: active ones, in display order.
+     *
+     * Unlike courtOptions() above — which lists whatever courts *have* history
+     * so the filter can find it, deleted ones included — this list is about
+     * what may be sold now, so it takes the live set only.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function bookableCourts(): array
+    {
+        return Court::query()
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'category'])
+            ->map(static fn (Court $court): array => [
+                'id' => $court->getKey(),
+                'name' => (string) $court->name,
+                'category_label' => $court->categoryLabel(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * One day's inventory as a time-by-court grid.
+     *
+     * Every slot on the day is returned, not just the free ones. A grid that
+     * hid taken hours would read as "nothing exists here" for a fully booked
+     * evening, which is the moment staff most need to see who has what — so
+     * unavailable cells come back labelled and unselectable rather than blank.
+     *
+     * @return array<string, mixed>
+     */
+    private function schedule(string $date): array
+    {
+        $courtIds = array_column($this->bookableCourts(), 'id');
+
+        $slots = $courtIds === []
+            ? new Collection
+            : CourtSlot::query()
+                ->whereIn('court_id', $courtIds)
+                ->forDate($date)
+                ->orderBy('start_time')
+                ->get(['id', 'court_id', 'slot_date', 'start_time', 'end_time', 'price', 'status', 'held_booking_id']);
+
+        // Group by the wall-clock range rather than by start time alone: two
+        // courts may run different slot lengths on the same day, and merging
+        // an 8–9 with an 8–10 into one row would misprice whichever the staff
+        // member happened to read off the other column.
+        $rows = $slots
+            ->groupBy(fn (CourtSlot $slot): string => $slot->time_range)
+            ->map(function (Collection $group, string $range): array {
+                $first = $group->first();
+
+                return [
+                    'key' => $range,
+                    'time_range' => $range,
+                    'starts_at' => $first->startsAt()->toIso8601String(),
+                    'has_started' => $first->hasStarted(),
+                    // Whether this hour is over, which is what actually decides
+                    // `completed` vs `confirmed` server-side. Sent per row, not
+                    // inferred from the day: an evening session finished an hour
+                    // ago is a backfill even though its date is still today.
+                    'has_ended' => $first->endsAt()->isPast(),
+                    'cells' => $group
+                        ->mapWithKeys(fn (CourtSlot $slot): array => [
+                            (string) $slot->court_id => $this->pickerCell($slot),
+                        ])
+                        ->all(),
+                ];
+            })
+            ->sortBy('starts_at')
+            ->values()
+            ->all();
+
+        $day = Carbon::parse($date);
+
+        return [
+            'date' => $date,
+            'date_label' => $day->format('l, j F Y'),
+            'is_past' => $day->isPast() && ! $day->isToday(),
+            'rows' => $rows,
+            'available_count' => $slots
+                ->filter(fn (CourtSlot $slot): bool => $slot->status === CourtSlot::STATUS_AVAILABLE)
+                ->count(),
+            'slot_count' => $slots->count(),
+        ];
+    }
+
+    /**
+     * One cell of the picker grid.
+     *
+     * `selectable` deliberately ignores whether the hour has already started —
+     * a past slot that nobody took is exactly what a backfill needs to pick.
+     * The only thing that disqualifies a slot here is somebody else already
+     * having it, or the club having taken it off the market.
+     *
+     * @return array<string, mixed>
+     */
+    private function pickerCell(CourtSlot $slot): array
+    {
+        $status = (string) $slot->status;
+
+        return [
+            'id' => $slot->getKey(),
+            'status' => $status,
+            'price' => (float) $slot->price,
+            'price_formatted' => $this->money($slot->price),
+            'selectable' => $status === CourtSlot::STATUS_AVAILABLE,
+            'label' => match ($status) {
+                CourtSlot::STATUS_AVAILABLE => $this->money($slot->price),
+                CourtSlot::STATUS_HELD => 'On hold',
+                CourtSlot::STATUS_BOOKED => 'Booked',
+                CourtSlot::STATUS_BLOCKED => 'Blocked',
+                default => ucfirst($status),
+            },
+        ];
+    }
+
+    /**
+     * The two ways a desk-made booking can land, as the form renders them.
+     *
+     * @return list<array<string, string>>
+     */
+    private function modeOptions(): array
+    {
+        return [
+            [
+                'value' => BookingService::MANUAL_MODE_CONFIRMED,
+                'label' => 'Confirmed — already settled',
+                'description' => 'The court is sold. Use this when the customer has paid, or the owner has given it to them.',
+            ],
+            [
+                'value' => BookingService::MANUAL_MODE_RESERVED,
+                'label' => 'Reserved — waiting for payment',
+                'description' => 'The court is held with no expiry. Confirm it later when the payment comes in.',
+            ],
+        ];
+    }
+
+    /**
+     * What the staff member is told after the booking is written.
+     *
+     * The status is restated rather than assumed, because it is not always the
+     * one they chose: a session that has already finished is recorded as
+     * completed whatever mode was picked, and silently doing that would leave
+     * them looking for a confirmed booking that does not exist.
+     */
+    private function createdMessage(Booking $booking): string
+    {
+        return match ((string) $booking->status) {
+            Booking::STATUS_COMPLETED => sprintf(
+                'Booking %s recorded as completed — that schedule has already finished.',
+                (string) $booking->code,
+            ),
+            Booking::STATUS_CONFIRMED => sprintf(
+                'Booking %s created and confirmed. The court is reserved.',
+                (string) $booking->code,
+            ),
+            default => sprintf(
+                'Booking %s created and held with no expiry. Confirm it once the payment comes in.',
+                (string) $booking->code,
+            ),
+        };
+    }
+
+    /* ===================================================================== */
     /* Presentation                                                           */
     /* ===================================================================== */
 
@@ -404,6 +651,11 @@ class BookingController extends Controller
             'id' => $booking->getKey(),
             'code' => (string) $booking->code,
             'status' => (string) $booking->status,
+            // Where it came from. The queue badges manual bookings because
+            // "no payment proof" reads as a missing step on a public booking
+            // and as the normal state of affairs on a desk-made one.
+            'source' => (string) $booking->source,
+            'is_manual' => $booking->isManual(),
 
             'customer_name' => (string) $booking->customer_name,
             'customer_phone' => (string) $booking->customer_phone,
@@ -463,9 +715,16 @@ class BookingController extends Controller
         $court = $booking->relationLoaded('court') ? $booking->getRelation('court') : null;
         $confirmedBy = $booking->relationLoaded('confirmedBy') ? $booking->getRelation('confirmedBy') : null;
         $rejectedBy = $booking->relationLoaded('rejectedBy') ? $booking->getRelation('rejectedBy') : null;
+        $createdBy = $booking->relationLoaded('createdBy') ? $booking->getRelation('createdBy') : null;
 
         return array_merge($this->row($booking), [
             'notes' => (string) $booking->notes,
+
+            // Who keyed a desk-made booking in. Null on a public booking, and
+            // the detail screen renders that null as "the public site" rather
+            // than as a blank — a booking nobody keyed in is not a booking of
+            // unknown origin.
+            'created_by' => $createdBy instanceof User ? (string) $createdBy->name : null,
 
             'court' => $court instanceof Court ? [
                 'id' => $court->getKey(),
@@ -651,13 +910,25 @@ class BookingController extends Controller
     {
         return [
             'verify' => Gate::allows('verify', Booking::class),
+            'create' => Gate::allows('create', Booking::class),
             'delete' => Gate::allows('delete', Booking::class),
         ];
     }
 
+    /**
+     * Mirrors BookingService::confirmableFrom() — a public booking must have
+     * submitted proof first, a desk-made hold has no proof step to wait for
+     * and is confirmed straight out of awaiting_payment. Kept in step with the
+     * service deliberately: a Confirm button the state machine would refuse is
+     * worse than no button at all.
+     */
     private function canConfirm(Booking $booking): bool
     {
-        return $booking->status === Booking::STATUS_PENDING_VERIFICATION
+        $confirmable = $booking->isManual()
+            ? [Booking::STATUS_PENDING_VERIFICATION, Booking::STATUS_AWAITING_PAYMENT]
+            : [Booking::STATUS_PENDING_VERIFICATION];
+
+        return in_array((string) $booking->status, $confirmable, true)
             && Gate::allows('confirm', $booking);
     }
 

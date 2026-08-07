@@ -24,7 +24,7 @@ class RolePermissionSeeder extends Seeder
         'dashboard' => ['dashboard.view'],
         'courts' => ['courts.view', 'courts.create', 'courts.update', 'courts.delete'],
         'slots' => ['slots.view', 'slots.create', 'slots.update', 'slots.delete', 'slots.generate'],
-        'bookings' => ['bookings.view', 'bookings.verify', 'bookings.delete'],
+        'bookings' => ['bookings.view', 'bookings.verify', 'bookings.create', 'bookings.delete'],
         'users' => ['users.view', 'users.create', 'users.update', 'users.delete'],
         'roles' => ['roles.view', 'roles.create', 'roles.update', 'roles.delete'],
         'settings' => ['settings.view', 'settings.update'],
@@ -37,8 +37,15 @@ class RolePermissionSeeder extends Seeder
     public const ROLE_STAFF = 'Staff';
 
     /**
-     * Staff run the day-to-day desk: they schedule slots and verify payments,
-     * but never touch users, roles, settings or the audit log.
+     * Staff run the day-to-day desk: they schedule slots, verify payments and
+     * key in the bookings customers arrange directly with the club, but never
+     * touch users, roles, settings or the audit log.
+     *
+     * `bookings.create` is granted deliberately, not by oversight: taking a
+     * booking over the counter is the desk's job, and withholding it would
+     * mean every walk-in had to wait for an admin. It stays separate from
+     * `bookings.delete` for the same reason that one always has — staff record
+     * and clear work, they do not erase history.
      *
      * @var list<string>
      */
@@ -52,6 +59,7 @@ class RolePermissionSeeder extends Seeder
         'slots.generate',
         'bookings.view',
         'bookings.verify',
+        'bookings.create',
     ];
 
     public function run(): void

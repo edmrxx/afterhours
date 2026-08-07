@@ -9,6 +9,7 @@ import {
     Clock,
     Copy,
     Eye,
+    Plus,
     RotateCcw,
     Trash2,
     TriangleAlert,
@@ -62,9 +63,20 @@ const { confirmAction, confirmDelete, toastSuccess, toastError } = useSwal();
 // is filtered.
 const table = useDataTable(
     'admin.bookings.index',
-    { status: '', court_id: '', date_from: '', date_to: '' },
+    { status: '', source: '', court_id: '', date_from: '', date_to: '' },
     { only: ['bookings', 'statusCounts', 'filters', 'serverTime'] },
 );
+
+/*
+| Where the booking came from. Blank is "both" and stays the default — the
+| desk works one queue, and splitting it by default would hide half the work
+| behind a filter nobody remembered to clear.
+*/
+const sourceOptions = [
+    { value: '', label: 'All sources' },
+    { value: 'online', label: 'Public site' },
+    { value: 'manual', label: 'Manual' },
+];
 
 const rows = computed(() => props.bookings?.data ?? []);
 
@@ -407,6 +419,10 @@ async function copy(value, label = 'Copied') {
                     <template #icon><RotateCcw :size="15" aria-hidden="true" /></template>
                     Clear filters
                 </Button>
+                <Button v-if="can.create" size="sm" :href="route('admin.bookings.create')">
+                    <template #icon><Plus :size="15" aria-hidden="true" /></template>
+                    New booking
+                </Button>
             </template>
         </PageHeader>
 
@@ -433,7 +449,7 @@ async function copy(value, label = 'Copied') {
                 search-placeholder="Code, name, phone or payment reference…"
                 min-width="min-w-[68rem]"
                 empty-title="No bookings yet"
-                empty-description="Reservations made on the public site land here for verification."
+                empty-description="Reservations from the public site land here for verification, alongside any you key in yourself."
                 :empty-icon="ClipboardList"
                 @sort="table.sortBy"
             >
@@ -444,6 +460,15 @@ async function copy(value, label = 'Copied') {
                             :options="courts"
                             placeholder="All courts"
                             label="Court"
+                            size="sm"
+                            sr-only-label
+                        />
+                    </div>
+                    <div class="w-full sm:w-40">
+                        <FormSelect
+                            v-model="table.filters.source"
+                            :options="sourceOptions"
+                            label="Source"
                             size="sm"
                             sr-only-label
                         />
@@ -484,6 +509,12 @@ async function copy(value, label = 'Copied') {
                             />
                             <Copy v-else :size="12" class="opacity-50" aria-hidden="true" />
                         </button>
+
+                        <!-- Badged because "no payment proof" means opposite
+                             things on the two sources: a missing step on a
+                             public booking, and the normal state of affairs on
+                             one the desk keyed in. -->
+                        <Badge v-if="row.is_manual" tone="info" label="Manual" size="xs" :dot="false" />
                     </div>
                     <p class="mt-1 text-[11px] text-ink-400">{{ row.created_label }}</p>
                 </template>

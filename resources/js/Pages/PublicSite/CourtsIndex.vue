@@ -688,24 +688,6 @@ function submitLookup() {
                                     @dismiss="slotError = null"
                                 />
 
-                                <!-- Rates summary banner -->
-                                <div
-                                    v-if="!loadingSchedule && grid?.rates?.length"
-                                    class="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-bone-100 px-3 py-2.5 ring-1 ring-inset ring-bone-300/70"
-                                >
-                                    <span class="text-[11px] font-semibold tracking-wide text-noir-500 uppercase">
-                                        Rates
-                                    </span>
-                                    <span
-                                        v-for="(band, index) in grid.rates"
-                                        :key="index"
-                                        class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-noir-700 ring-1 ring-inset ring-bone-300"
-                                    >
-                                        <span class="font-semibold text-ash-700">{{ money(band.price) }}</span>
-                                        <span class="text-noir-400">{{ band.start }} – {{ band.end }}</span>
-                                    </span>
-                                </div>
-
                                 <!-- Skeleton while the partial reload is in flight -->
                                 <div
                                     v-if="loadingSchedule"

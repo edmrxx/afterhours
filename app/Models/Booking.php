@@ -56,11 +56,33 @@ class Booking extends Model
         self::STATUS_PENDING_VERIFICATION,
     ];
 
+    public const SOURCE_ONLINE = 'online';
+
+    public const SOURCE_MANUAL = 'manual';
+
+    /**
+     * How a booking came into existence.
+     *
+     * `online` is a guest who walked the public checkout themselves; `manual`
+     * is a staff member keying one in at the desk for a customer who arranged
+     * it directly with the club. The distinction is not cosmetic â it decides
+     * whether a payment was ever verified, whether the customer is expecting
+     * mail, and which of the two the revenue report is looking at.
+     *
+     * @var list<string>
+     */
+    public const SOURCES = [
+        self::SOURCE_ONLINE,
+        self::SOURCE_MANUAL,
+    ];
+
     public const PAYMENT_METHOD_BDO = 'bdo';
 
     public const PAYMENT_METHOD_GOTYME = 'gotyme';
 
     public const PAYMENT_METHOD_GCASH = 'gcash';
+
+    public const PAYMENT_METHOD_CASH = 'cash';
 
     /**
      * The methods checkout may offer, in the order it renders them.
@@ -71,8 +93,13 @@ class Booking extends Model
      *
      * The order here is the order of the checkout payload, and
      * {@see \App\Services\PaymentMethodService::CATALOGUE} is what actually
-     * drives the settings screen, the validator and the seeder — this list is
-     * the model-level answer to "what may be written to payment_method".
+     * drives the settings screen, the validator and the seeder.
+     *
+     * This is the OFFER list, not the storable one: cash is a real value of
+     * `payment_method` that checkout must never present, because there is no
+     * QR to scan and no reference to submit for money handed over at the desk.
+     * {@see self::STORABLE_PAYMENT_METHODS} is the answer to "what may be
+     * written to the column".
      *
      * @var list<string>
      */
@@ -80,6 +107,20 @@ class Booking extends Model
         self::PAYMENT_METHOD_BDO,
         self::PAYMENT_METHOD_GOTYME,
         self::PAYMENT_METHOD_GCASH,
+    ];
+
+    /**
+     * Every value `payment_method` may legitimately hold: the methods
+     * checkout offers, plus the ones only the desk can record.
+     *
+     * Spread rather than re-listed so a wallet added to the offer list above
+     * can never be accidentally left un-storable.
+     *
+     * @var list<string>
+     */
+    public const STORABLE_PAYMENT_METHODS = [
+        ...self::PAYMENT_METHODS,
+        self::PAYMENT_METHOD_CASH,
     ];
 
     /**
@@ -100,6 +141,7 @@ class Booking extends Model
         'notes',
         'amount',
         'status',
+        'source',
         'payment_reference',
         'payment_method',
         'payment_proof_path',
@@ -107,6 +149,7 @@ class Booking extends Model
         'hold_expires_at',
         'confirmed_at',
         'confirmed_by',
+        'created_by',
         'rejected_at',
         'rejected_by',
         'rejection_reason',
@@ -128,6 +171,7 @@ class Booking extends Model
             'court_id' => 'integer',
             'court_slot_id' => 'integer',
             'confirmed_by' => 'integer',
+            'created_by' => 'integer',
             'rejected_by' => 'integer',
         ];
     }
@@ -254,6 +298,20 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'confirmed_by');
     }
 
+    /**
+     * The staff member who keyed this booking in at the desk.
+     *
+     * Null for every public booking, and that null is the fact: a guest
+     * checkout has no staff member behind it, so naming one would invent an
+     * author for something nobody authored.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     /** @return BelongsTo<User, $this> */
     public function rejectedBy(): BelongsTo
     {
@@ -277,6 +335,23 @@ class Booking extends Model
         return is_array($status)
             ? $query->whereIn('status', $status)
             : $query->where('status', $status);
+    }
+
+    /**
+     * Narrow to public bookings or desk-made ones. A blank filter means
+     * "both", which is the list's default — staff should see one queue, not
+     * two, unless they deliberately ask to split it.
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeSource(Builder $query, ?string $source): Builder
+    {
+        if (blank($source) || ! in_array($source, self::SOURCES, true)) {
+            return $query;
+        }
+
+        return $query->where('bookings.source', $source);
     }
 
     /**
@@ -414,6 +489,18 @@ class Booking extends Model
     /* Helpers                                                             */
     /* ------------------------------------------------------------------ */
 
+    /**
+     * Whether the desk keyed this in rather than a guest booking themselves.
+     *
+     * Read as a positive test against the constant, never as `!= 'online'`:
+     * a future third source must not silently start reading as manual and
+     * inherit manual's exemptions from payment proof and customer mail.
+     */
+    public function isManual(): bool
+    {
+        return $this->source === self::SOURCE_MANUAL;
+    }
+
     public function isHolding(): bool
     {
         return in_array($this->status, self::HOLDING_STATUSES, true);
@@ -450,6 +537,9 @@ class Booking extends Model
             // than decaying to an em dash, which would lose the one fact staff
             // need to find the transaction.
             self::PAYMENT_METHOD_GCASH => 'GCash',
+            // Never offered by checkout — only the desk can record it, for a
+            // booking arranged directly with the club and settled in person.
+            self::PAYMENT_METHOD_CASH => 'Cash',
             default => null,
         };
     }

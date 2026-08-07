@@ -730,6 +730,15 @@ const entryStyle = (action) => ACTION_TONES[action] ?? ACTION_TONES.view;
                                 <dt class="text-ink-500">Booked</dt>
                                 <dd class="text-right text-ink-700">{{ booking.created_full ?? '—' }}</dd>
                             </div>
+                            <!-- Named rather than left blank: a booking nobody
+                                 keyed in is not a booking of unknown origin,
+                                 it is one the customer made themselves. -->
+                            <div class="flex items-start justify-between gap-3">
+                                <dt class="text-ink-500">Taken by</dt>
+                                <dd class="text-right text-ink-700">
+                                    {{ booking.created_by ?? 'The public site' }}
+                                </dd>
+                            </div>
                             <div class="flex items-start justify-between gap-3">
                                 <dt class="text-ink-500">IP address</dt>
                                 <dd class="text-right font-mono text-ink-700">

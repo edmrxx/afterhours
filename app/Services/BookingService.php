@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Throwable;
 
 /**
@@ -84,6 +85,22 @@ class BookingService
     public const SLOT_BOOKED = 'booked';
 
     public const SLOT_BLOCKED = 'blocked';
+
+    /**
+     * How the desk wants a manually keyed booking to land.
+     *
+     * `confirmed` is money already settled — in person, or an arrangement the
+     * owner has personally vouched for — so the court is sold outright.
+     * `reserved` holds the court for someone who has not paid yet: the same
+     * shape as a guest's hold, with one deliberate difference — no expiry
+     * clock, because it was arranged with a human, not with a checkout timer.
+     */
+    public const MANUAL_MODE_CONFIRMED = 'confirmed';
+
+    public const MANUAL_MODE_RESERVED = 'reserved';
+
+    /** @var list<string> */
+    public const MANUAL_MODES = [self::MANUAL_MODE_CONFIRMED, self::MANUAL_MODE_RESERVED];
 
     public function __construct(
         private readonly AuditTrailService $audit,
@@ -289,6 +306,229 @@ class BookingService
     }
 
     /* ===================================================================== */
+    /* 1b. reserveManually() — the desk keys one in                           */
+    /* ===================================================================== */
+
+    /**
+     * Record a booking the club took directly — over chat, over the phone, or
+     * across the counter — instead of through the public checkout.
+     *
+     * This is deliberately NOT reserve() with a flag. It shares reserve()'s
+     * locking discipline exactly (dedupe, sort ascending, lock the whole set
+     * in one query, re-read status from the locked rows, all-or-nothing), but
+     * it differs on four decisions that only make sense for a booking a
+     * trusted human is standing behind:
+     *
+     *  - **No hold clock.** `hold_expires_at` stays null, so the release
+     *    scheduler — which scans `whereNotNull('hold_expires_at')` — never
+     *    sees it. A court held for a friend of the owner must not evaporate
+     *    thirty minutes later because nobody clicked anything.
+     *  - **No past-date guard.** reserve() refuses a slot that has already
+     *    started, because a guest booking one is always a mistake. The desk
+     *    keying one in is the opposite: it is how last night's walk-in gets
+     *    into the books at all.
+     *  - **It may land already settled.** There is no payment to verify, so
+     *    `confirmed` (or `completed`, below) is reachable in one step.
+     *  - **It stays silent.** See notifyCustomer() — nobody mails a customer
+     *    about a booking they made by talking to a person.
+     *
+     * A blocked slot is still refused. Blocking is how the club takes a court
+     * off the market for maintenance or a private event, and a manual booking
+     * that could silently overwrite that would make the block meaningless;
+     * staff who really want the hour unblock it first, deliberately.
+     *
+     * @param  array<int, int|string>  $slotIds  every court_slot id being claimed
+     * @param  array<string, mixed>  $customer  name / phone / email / notes
+     * @param  string  $mode  one of self::MANUAL_MODES
+     *
+     * @throws BookingException when any slot is gone or blocked
+     * @throws InvalidArgumentException on an unknown mode
+     */
+    public function reserveManually(array $slotIds, array $customer, User $actor, string $mode): Booking
+    {
+        if (! in_array($mode, self::MANUAL_MODES, true)) {
+            throw new InvalidArgumentException(sprintf('Unknown manual booking mode "%s".', $mode));
+        }
+
+        $details = $this->normaliseCustomer($customer);
+
+        // Same fixed ascending lock order as reserve(). The desk and the
+        // public site claim slots out of the same table, so they must agree on
+        // lock ordering or a staff member and a guest racing for the same hour
+        // can deadlock each other.
+        $ids = array_values(array_unique(array_map(
+            static fn (mixed $id): int => (int) $id,
+            $slotIds,
+        )));
+        sort($ids);
+
+        if ($ids === []) {
+            throw BookingException::slotUnavailable();
+        }
+
+        $booking = DB::transaction(function () use ($ids, $details, $actor, $mode): Booking {
+            AuditTrailService::actingAs($actor);
+
+            try {
+                return AuditTrailService::withoutAuditing(function () use ($ids, $details, $actor, $mode): Booking {
+                    $locked = CourtSlot::query()
+                        ->whereIn('id', $ids)
+                        ->orderBy('id')
+                        ->lockForUpdate()
+                        ->get();
+
+                    if ($locked->count() !== count($ids)) {
+                        throw BookingException::slotUnavailable();
+                    }
+
+                    // All-or-nothing, exactly as reserve(): throwing here
+                    // aborts the one transaction wrapping every write below,
+                    // so a clash on any single hour leaves none of them held.
+                    foreach ($locked as $candidate) {
+                        $slotState = $this->statusOf($candidate, 'status');
+
+                        if ($slotState === self::SLOT_BLOCKED) {
+                            throw BookingException::slotBlocked();
+                        }
+
+                        if ($slotState !== self::SLOT_AVAILABLE) {
+                            throw BookingException::slotUnavailable();
+                        }
+                    }
+
+                    $chronological = $locked->sortBy([
+                        ['slot_date', 'asc'],
+                        ['start_time', 'asc'],
+                    ])->values();
+                    $primary = $chronological->first();
+
+                    $amount = $chronological->sum(static fn (CourtSlot $s): float => (float) $s->price);
+
+                    // A session that has already finished is history, not a
+                    // reservation, so it is recorded as `completed` whatever
+                    // mode was asked for — "reserve" and "confirm" are both
+                    // statements about a court someone can still walk onto.
+                    //
+                    // The test is the LAST end, not the first start: a walk-in
+                    // keyed in mid-session (the 9pm hour running now, plus the
+                    // 10pm hour after it) is still very much in progress, and
+                    // must land as a live booking rather than as history.
+                    $endsAt = $chronological->reduce(
+                        static fn (?CarbonInterface $latest, CourtSlot $s): CarbonInterface => $latest === null || $s->endsAt()->greaterThan($latest)
+                            ? $s->endsAt()
+                            : $latest,
+                    );
+                    $alreadyPlayed = $endsAt?->isPast() === true;
+
+                    $status = match (true) {
+                        $alreadyPlayed => self::COMPLETED,
+                        $mode === self::MANUAL_MODE_CONFIRMED => self::CONFIRMED,
+                        default => self::AWAITING_PAYMENT,
+                    };
+
+                    // Only an unpaid hold leaves the slot merely held; both
+                    // settled outcomes sell the hour outright.
+                    $slotStatus = $status === self::AWAITING_PAYMENT
+                        ? self::SLOT_HELD
+                        : self::SLOT_BOOKED;
+
+                    $settled = $status !== self::AWAITING_PAYMENT;
+
+                    $booking = new Booking;
+                    $booking->forceFill([
+                        'code' => $this->uniqueCode(),
+                        'court_id' => $primary->court_id,
+                        'court_slot_id' => $primary->getKey(),
+                        'customer_name' => $details['customer_name'],
+                        'customer_phone' => $details['customer_phone'],
+                        'customer_email' => $details['customer_email'],
+                        'notes' => $details['notes'],
+                        'amount' => $amount,
+                        'status' => $status,
+                        'source' => Booking::SOURCE_MANUAL,
+                        'created_by' => $actor->getKey(),
+                        // Cash is the honest record of a booking settled with
+                        // the club directly; an unpaid hold names no method at
+                        // all, because none has been chosen yet.
+                        'payment_method' => $settled ? Booking::PAYMENT_METHOD_CASH : null,
+                        // Never expires — the whole point of a desk-made hold.
+                        'hold_expires_at' => null,
+                        'confirmed_at' => $settled ? now() : null,
+                        'confirmed_by' => $settled ? $actor->getKey() : null,
+                        // The staff member's own request, which is the truth:
+                        // this booking was made from the admin area, and the
+                        // trail should be able to say from where.
+                        'ip_address' => Str::limit((string) Request::ip(), 45, ''),
+                        'user_agent' => Str::limit((string) Request::userAgent(), 500, ''),
+                    ])->save();
+
+                    foreach ($chronological as $candidate) {
+                        $candidate->forceFill([
+                            'status' => $slotStatus,
+                            'held_booking_id' => $booking->getKey(),
+                        ])->save();
+                    }
+
+                    // Durable slot history, same contract as reserve().
+                    $now = now();
+                    DB::table('booking_slots')->insert(
+                        $chronological->map(static fn (CourtSlot $s): array => [
+                            'booking_id' => $booking->getKey(),
+                            'court_slot_id' => $s->getKey(),
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ])->all()
+                    );
+
+                    $slotCount = $chronological->count();
+                    $timeRanges = $slotCount <= 4
+                        ? $chronological->map(fn (CourtSlot $s): string => $this->slotTimeRange($s))->implode(', ')
+                        : sprintf('%d time slots', $slotCount);
+
+                    $chronological->loadMissing('court');
+                    $courtLabel = implode(', ', array_values(array_unique(
+                        $chronological->map(fn (CourtSlot $s): string => $this->slotCourtName($s))->all(),
+                    )));
+
+                    $this->audit->log(
+                        module: 'Bookings',
+                        action: 'create',
+                        description: sprintf(
+                            'Manually booked %s for %s — %s, %s %s (%d slot%s, %s). Recorded as %s.',
+                            (string) $booking->code,
+                            (string) $booking->customer_name,
+                            $courtLabel,
+                            $this->slotDate($primary),
+                            $timeRanges,
+                            $slotCount,
+                            $slotCount === 1 ? '' : 's',
+                            $this->formatMoney($amount),
+                            $this->statusLabel($status),
+                        ),
+                        model: $booking,
+                        newValues: [
+                            'status' => $status,
+                            'source' => Booking::SOURCE_MANUAL,
+                            'amount' => (string) $booking->amount,
+                            'court_slot_id' => $primary->getKey(),
+                            'slot_count' => $slotCount,
+                            'slot_status' => $slotStatus,
+                        ],
+                    );
+
+                    return $booking;
+                });
+            } finally {
+                AuditTrailService::actingAs(null);
+            }
+        });
+
+        // No notifications, by design — see notifyCustomer(). The staff member
+        // who keyed this in is the one already talking to the customer.
+        return $booking->refresh();
+    }
+
+    /* ===================================================================== */
     /* 2. submitPayment() — guest hands over the payment reference             */
     /* ===================================================================== */
 
@@ -427,7 +667,7 @@ class BookingService
             return $booking;
         }
 
-        if ($status !== self::PENDING_VERIFICATION) {
+        if (! in_array($status, $this->confirmableFrom($booking), true)) {
             throw BookingException::invalidTransition($booking, $status, self::CONFIRMED);
         }
 
@@ -447,14 +687,19 @@ class BookingService
                     // scheduler can be mid-expiry on this exact row.
                     $fresh = Booking::query()->whereKey($booking->getKey())->lockForUpdate()->first();
 
+                    // Re-derive the allowed set from the LOCKED row, not from
+                    // the caller's copy: `source` decides what may confirm, so
+                    // the decision has to be made about the row we own.
                     if (! $fresh instanceof Booking
-                        || $this->statusOf($fresh, 'status') !== self::PENDING_VERIFICATION) {
+                        || ! in_array($this->statusOf($fresh, 'status'), $this->confirmableFrom($fresh), true)) {
                         throw BookingException::invalidTransition(
                             $booking,
                             $fresh instanceof Booking ? $this->statusOf($fresh, 'status') : self::EXPIRED,
                             self::CONFIRMED,
                         );
                     }
+
+                    $from = $this->statusOf($fresh, 'status');
 
                     $slots = $this->lockSlotsFor($fresh);
 
@@ -499,7 +744,10 @@ class BookingService
                             (string) ($booking->payment_reference ?: 'none'),
                         ),
                         model: $booking,
-                        oldValues: ['status' => self::PENDING_VERIFICATION],
+                        // The status actually left behind, which is no longer
+                        // always pending_verification: a desk-made hold is
+                        // confirmed straight out of awaiting_payment.
+                        oldValues: ['status' => $from],
                         newValues: ['status' => self::CONFIRMED, 'slot_status' => self::SLOT_BOOKED],
                     );
                 });
@@ -514,6 +762,29 @@ class BookingService
         $this->notifyOwner($booking, OwnerBookingAlert::EVENT_CONFIRMED);
 
         return $booking;
+    }
+
+    /**
+     * Which statuses confirm() will accept as a starting point.
+     *
+     * For a public booking the answer is the one it has always been: a guest
+     * must have submitted proof, so only `pending_verification` may be
+     * confirmed. Confirming an `awaiting_payment` guest booking would be
+     * signing off on a payment nobody ever saw.
+     *
+     * A desk-made hold has no such step and never will — there is no proof to
+     * submit, because the money was arranged with a person. Blocking it out of
+     * `awaiting_payment` would leave it permanently unconfirmable: staff could
+     * hold a court for the owner's friend and then have no way to close the
+     * booking when the friend actually paid.
+     *
+     * @return list<string>
+     */
+    private function confirmableFrom(Booking $booking): array
+    {
+        return $booking->isManual()
+            ? [self::PENDING_VERIFICATION, self::AWAITING_PAYMENT]
+            : [self::PENDING_VERIFICATION];
     }
 
     /* ===================================================================== */
@@ -817,6 +1088,75 @@ class BookingService
     }
 
     /**
+     * Hand back every slot a booking still occupies, whatever its status —
+     * the deletion path's counterpart to releaseSlotsFor() above.
+     *
+     * releaseSlotsFor() is deliberately narrow: it frees `held` rows only,
+     * because reject() / cancel() / expire() walk a booking back off a hold
+     * and must never reopen an hour that has since been sold to someone else
+     * or taken off the market. Deletion is the one transition where that
+     * narrowness is wrong. confirm() promotes a booking's slots to `booked`
+     * and complete() deliberately leaves them there, so a confirmed or
+     * completed booking holds hours no status-gated release will ever touch.
+     * Delete that booking and the hours sit `booked` forever, pointing at a
+     * row that no longer exists — gone from the admin list, still unsellable
+     * on the public grid, and nothing left on screen to explain why.
+     *
+     * `blocked` is the one status left as it stands: staff took that hour off
+     * the market on purpose, and deleting a booking is no reason to put it
+     * back on sale. Its pointer is still cleared, because after the delete it
+     * refers to nothing either way.
+     *
+     * Opens its own transaction — call it before the delete, not inside one.
+     * Slot writes are suppressed from the audit trail and summarised in a
+     * single entry, so freeing a six-slot booking does not bury the deletion
+     * it belongs to under six near-identical "Slots" rows.
+     *
+     * @return int how many hours went back on sale
+     */
+    public function releaseSlotsOnDeletion(Booking $booking): int
+    {
+        return DB::transaction(function () use ($booking): int {
+            return AuditTrailService::withoutAuditing(function () use ($booking): int {
+                $freed = 0;
+
+                foreach ($this->lockSlotsFor($booking) as $slot) {
+                    $status = $this->statusOf($slot, 'status');
+                    $sellable = in_array($status, [self::SLOT_HELD, self::SLOT_BOOKED], true);
+
+                    $slot->forceFill([
+                        'status' => $sellable ? self::SLOT_AVAILABLE : $status,
+                        'held_booking_id' => null,
+                    ])->save();
+
+                    if ($sellable) {
+                        $freed++;
+                    }
+                }
+
+                if ($freed > 0) {
+                    $this->audit->log(
+                        module: 'Bookings',
+                        action: 'update',
+                        description: sprintf(
+                            '%d %s freed from deleted booking %s (%s) and returned to available.',
+                            $freed,
+                            Str::plural('slot', $freed),
+                            (string) $booking->code,
+                            (string) $booking->customer_name,
+                        ),
+                        model: $booking,
+                        oldValues: ['slot_status' => self::SLOT_BOOKED],
+                        newValues: ['slot_status' => self::SLOT_AVAILABLE, 'slots_freed' => $freed],
+                    );
+                }
+
+                return $freed;
+            });
+        });
+    }
+
+    /**
      * Fetch every slot currently held by a booking, with a row lock, ordered
      * ascending by id — the same deterministic lock-order reasoning as
      * reserve(): every transition that touches a set of slot rows locks them
@@ -844,6 +1184,21 @@ class BookingService
      */
     private function notifyCustomer(Booking $booking, object $notification): void
     {
+        // A desk-made booking was arranged in a conversation, and the customer
+        // already knows they have the court — the staff member who keyed it in
+        // is the same person who told them. Mailing an automated "we received
+        // your booking" on top of that reads as a system glitch, not as a
+        // confirmation, and for a court booked for a friend of the owner it can
+        // arrive as the first the customer hears of an email address the club
+        // wrote down for them.
+        //
+        // Gated here rather than at each call site so it holds for every
+        // transition a manual booking can go through — created, later
+        // confirmed, cancelled — instead of only the one it was created by.
+        if ($booking->isManual()) {
+            return;
+        }
+
         try {
             $routes = [];
 
@@ -931,6 +1286,14 @@ class BookingService
      */
     private function notifyOwner(Booking $booking, string $event): void
     {
+        // Nothing to report on a desk-made booking: this alert exists to tell
+        // the owner that business arrived while they weren't looking, and a
+        // manual booking is one their own staff just typed in — usually after
+        // the owner personally agreed to it.
+        if ($booking->isManual()) {
+            return;
+        }
+
         $email = $this->ownerNotificationEmail();
 
         if ($email === null) {

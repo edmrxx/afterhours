@@ -25,6 +25,8 @@ class BookingPolicy
 
     public const VERIFY = 'bookings.verify';
 
+    public const CREATE = 'bookings.create';
+
     public const DELETE = 'bookings.delete';
 
     /**
@@ -93,11 +95,17 @@ class BookingPolicy
     }
 
     /**
-     * Bookings are created by the public site, never from the admin area.
+     * Keying a booking in at the desk, for a customer who arranged it with the
+     * club directly instead of walking the public checkout.
+     *
+     * Its own permission rather than a reuse of `verify`: this hands out court
+     * time — potentially free court time — which is a different power from
+     * signing off on a payment somebody already made, and the club may well
+     * want to grant one without the other.
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->can(self::CREATE);
     }
 
     /**
